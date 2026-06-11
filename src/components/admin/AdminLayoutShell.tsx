@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
 const navItems = [
   { href: "/admin", label: "Dashboard" },
@@ -29,6 +30,16 @@ export default function AdminLayoutShell({
 }) {
   const pathname = usePathname();
 
+  if (pathname === "/admin/login") {
+    return <>{children}</>;
+  }
+
+  async function signOut() {
+    await supabase.auth.signOut();
+    document.cookie = "mio-admin-auth=; path=/admin; max-age=0; samesite=lax";
+    window.location.href = "/admin/login";
+  }
+
   return (
     <div className="min-h-screen bg-[#f7f4f2] lg:pl-72">
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-72 border-r border-white/10 bg-[#1f1d1c] text-white shadow-2xl lg:flex lg:flex-col">
@@ -37,6 +48,13 @@ export default function AdminLayoutShell({
             MIO Beauty
           </p>
           <h1 className="mt-2 text-2xl font-bold">Admin panel</h1>
+          <button
+            type="button"
+            onClick={signOut}
+            className="mt-4 rounded-full border border-white/15 px-4 py-2 text-xs font-bold text-white/75 transition hover:border-[#EEA391] hover:text-white"
+          >
+            Sign out
+          </button>
         </div>
 
         <nav className="flex-1 space-y-1 overflow-y-auto p-4">
