@@ -4,6 +4,7 @@ import {
   createContext,
   ReactNode,
   useContext,
+  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -23,26 +24,54 @@ type LanguageContextValue = {
 const LanguageContext =
   createContext<LanguageContextValue | null>(null);
 
+const storageKey = "mio-language";
+const cookieKey = "mio-language";
+
+function getSavedLanguage() {
+  if (typeof window === "undefined") return defaultLanguage;
+
+  const savedLanguage = window.localStorage.getItem(storageKey);
+  if (savedLanguage === "ru" || savedLanguage === "uz") {
+    return savedLanguage;
+  }
+
+  const cookieLanguage = document.cookie
+    .split("; ")
+    .find((item) => item.startsWith(`${cookieKey}=`))
+    ?.split("=")[1];
+
+  if (cookieLanguage === "ru" || cookieLanguage === "uz") {
+    return cookieLanguage;
+  }
+
+  return defaultLanguage;
+}
+
 export function LanguageProvider({
   children,
 }: {
   children: ReactNode;
 }) {
-  const [language, setLanguageState] = useState<Language>(() => {
-    if (typeof window === "undefined") return defaultLanguage;
-
-    const savedLanguage = window.localStorage.getItem("mio-language");
-    if (savedLanguage === "ru" || savedLanguage === "uz") {
-      return savedLanguage;
-    }
-
-    return defaultLanguage;
-  });
+  const [language, setLanguageState] = useState<Language>(defaultLanguage);
 
   function setLanguage(nextLanguage: Language) {
     setLanguageState(nextLanguage);
-    window.localStorage.setItem("mio-language", nextLanguage);
+    window.localStorage.setItem(storageKey, nextLanguage);
+    document.cookie = `${cookieKey}=${nextLanguage}; path=/; max-age=31536000; samesite=lax`;
+    document.documentElement.lang = nextLanguage;
   }
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setLanguageState(getSavedLanguage());
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.lang = language;
+  }, [language]);
 
   const value = useMemo(
     () => ({

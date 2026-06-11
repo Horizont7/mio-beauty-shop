@@ -1,5 +1,7 @@
 import { Banner } from "@/lib/banners";
+import { NavigationCategory } from "@/lib/categories";
 import { Language } from "@/lib/translations";
+import { VideoHighlight } from "@/lib/video-highlights";
 
 export type LocalizedProductFields = {
   name_ru?: string | null;
@@ -55,5 +57,31 @@ export function getLocalizedBanner(
     subtitle: banner.subtitle_ru || banner.subtitle || null,
     buttonText:
       banner.button_text_ru || banner.button_text || null,
+  };
+}
+
+export function getLocalizedCategory(
+  category: Pick<NavigationCategory, "name" | "name_ru" | "name_uz">,
+  language: Language
+) {
+  if (language === "uz") {
+    return category.name_uz || category.name_ru || category.name;
+  }
+
+  return category.name_ru || category.name_uz || category.name;
+}
+
+export function getLocalizedVideoHighlight(
+  highlight: Pick<VideoHighlight, "title" | "title_ru" | "title_uz">,
+  language: Language
+) {
+  if (language === "uz") {
+    return {
+      title: highlight.title_uz || highlight.title_ru || highlight.title,
+    };
+  }
+
+  return {
+    title: highlight.title_ru || highlight.title_uz || highlight.title,
   };
 }

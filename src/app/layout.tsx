@@ -1,5 +1,22 @@
 import "./globals.css";
+import type { Metadata } from "next";
 import { LanguageProvider } from "@/lib/language";
+
+export const metadata: Metadata = {
+  metadataBase: new URL("https://miobeauty.shop"),
+  title: {
+    default: "MIO Beauty",
+    template: "%s | MIO Beauty",
+  },
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "32x32" },
+      { url: "/icon.png", type: "image/png", sizes: "512x512" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: [{ url: "/apple-icon.png", type: "image/png", sizes: "180x180" }],
+  },
+};
 
 export default function RootLayout({
   children,

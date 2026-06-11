@@ -7,6 +7,7 @@ import SiteHeader from "@/components/SiteHeader";
 import { getBrandTheme } from "@/lib/brand";
 import { Category, NavigationCategory } from "@/lib/categories";
 import { useLanguage } from "@/lib/language";
+import { getLocalizedCategory } from "@/lib/localized-data";
 import { CategoryProduct } from "@/lib/products";
 
 type CategoryPageContentProps = {
@@ -49,7 +50,7 @@ export default function CategoryPageContent({
   products,
   errorMessage,
 }: CategoryPageContentProps) {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
 
   if (errorMessage) {
     return (
@@ -73,6 +74,7 @@ export default function CategoryPageContent({
   }
 
   const theme = getBrandTheme(`${category.name} ${category.slug}`);
+  const localizedCategoryName = getLocalizedCategory(category, language);
 
   return (
     <main className="min-h-screen bg-[var(--background)]">
@@ -89,7 +91,7 @@ export default function CategoryPageContent({
             {t("category")}
           </p>
           <h1 className="mt-4 text-6xl font-semibold text-[var(--brand-ink)]">
-            {category.name}
+            {localizedCategoryName}
           </h1>
           {category.description && (
             <p className="mt-6 max-w-2xl text-lg leading-8 text-[var(--brand-muted)]">

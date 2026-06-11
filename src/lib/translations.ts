@@ -144,6 +144,15 @@ export const translations = {
     valueCare: "Нежность",
     valueRitual: "Ритуал",
     valueTrust: "Доверие",
+    videoBlogEyebrow: "VIDEO BLOG",
+    videoBlogHeading: "Видеоблог",
+    videoBlogDescription:
+      "Ритуалы красоты, обзоры продукции, новинки бренда и полезные видео от MIO Beauty.",
+    videoBlogEmptyTitle: "Видео пока не опубликованы.",
+    videoBlogEmptyText:
+      "Администратор сможет публиковать видео, обзоры продукции и рекламные материалы.",
+    videoBlogClose: "Закрыть",
+    videoBlogMissing: "Видео не найдено.",
     videoBlog: "Видео",
     videoBlogTitle:
       "Красивые и полезные истории об уходе, брендах и ежедневных ритуалах.",
@@ -306,6 +315,15 @@ export const translations = {
     valueCare: "Yumshoqlik",
     valueRitual: "Go'zallik odati",
     valueTrust: "Ishonch",
+    videoBlogEyebrow: "VIDEO BLOG",
+    videoBlogHeading: "Video blog",
+    videoBlogDescription:
+      "MIO Beauty mahsulotlari, yangiliklar, tavsiyalar va foydali videolar.",
+    videoBlogEmptyTitle: "Hozircha videolar mavjud emas.",
+    videoBlogEmptyText:
+      "Administrator bu yerga mahsulot videolari va reklama materiallarini joylashtirishi mumkin.",
+    videoBlogClose: "Yopish",
+    videoBlogMissing: "Video topilmadi.",
     videoBlog: "Video",
     videoBlogTitle:
       "Parvarish, brendlar va kundalik ritual haqida chiroyli va foydali hikoyalar.",

@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { NavigationCategory } from "@/lib/categories";
 import { useLanguage } from "@/lib/language";
+import { getLocalizedCategory } from "@/lib/localized-data";
 
 export default function LuxuryFooter({
   categories,
 }: {
   categories: NavigationCategory[];
 }) {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
 
   return (
     <footer className="mt-24 bg-[#211f1e] text-white">
@@ -34,7 +35,7 @@ export default function LuxuryFooter({
                 href={`/category/${category.slug}`}
                 className="block transition hover:text-white"
               >
-                {category.name}
+                {getLocalizedCategory(category, language)}
               </Link>
             ))}
           </div>

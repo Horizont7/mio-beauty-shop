@@ -7,14 +7,21 @@ import { Banner } from "@/lib/banners";
 import { BrandTheme, getBrandTheme } from "@/lib/brand";
 import { NavigationCategory } from "@/lib/categories";
 import { useLanguage } from "@/lib/language";
-import { getLocalizedBanner, getLocalizedProduct } from "@/lib/localized-data";
+import {
+  getLocalizedBanner,
+  getLocalizedCategory,
+  getLocalizedProduct,
+} from "@/lib/localized-data";
 import { CatalogProduct } from "@/lib/products";
+import { VideoHighlight } from "@/lib/video-highlights";
 import ProductCard from "@/components/ProductCard";
+import VideoHighlightsSection from "@/components/VideoHighlightsSection";
 
 type HomePageContentProps = {
   banners: Banner[];
   categories: NavigationCategory[];
   products: CatalogProduct[];
+  videoHighlights: VideoHighlight[];
 };
 
 const productsPerPage = 16;
@@ -33,6 +40,7 @@ export default function HomePageContent({
   banners,
   categories,
   products,
+  videoHighlights,
 }: HomePageContentProps) {
   const [catalogOpen, setCatalogOpen] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] =
@@ -48,7 +56,7 @@ export default function HomePageContent({
   const displayBrands = categories.length
     ? categories
     : [
-        { id: -1, name: "MIO BEAUTY", name_ru: null, name_uz: null, slug: "mio-beauty" },
+                { id: -1, name: "MIO BEAUTY", name_ru: null, name_uz: null, slug: "mio-beauty" },
         { id: -2, name: "SHINESKIN", name_ru: null, name_uz: null, slug: "shineskin" },
         { id: -3, name: "MIO BABY", name_ru: null, name_uz: null, slug: "mio-baby" },
         { id: -4, name: "MIO HOME", name_ru: null, name_uz: null, slug: "mio-home" },
@@ -271,6 +279,7 @@ export default function HomePageContent({
         )}
       </section>
 
+      <VideoHighlightsSection highlights={videoHighlights} />
       <PlatformOverview />
       <BrandUniverse categories={displayBrands} />
       <MarketplaceGateway
@@ -340,7 +349,7 @@ function BrandUniverse({
 }: {
   categories: NavigationCategory[];
 }) {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
 
   return (
     <section className="mx-auto max-w-7xl px-6 py-24">
@@ -375,7 +384,7 @@ function BrandUniverse({
                 className="text-3xl font-semibold"
                 style={{ color: theme.primary }}
               >
-                {category.name}
+                {getLocalizedCategory(category, language)}
               </h3>
               <p className="mt-4 text-sm leading-7 text-[var(--brand-muted)]">
                 {t("brandCardText")}
@@ -468,7 +477,7 @@ function MarketplaceGateway({
   categories: NavigationCategory[];
   onOpenCatalog: () => void;
 }) {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
 
   return (
     <section className="mx-auto max-w-7xl px-6 pb-20">
@@ -524,7 +533,7 @@ function MarketplaceGateway({
                   style={{ background: theme.surface }}
                 >
                   <span className="font-semibold text-[var(--brand-ink)]">
-                    {category.name}
+                    {getLocalizedCategory(category, language)}
                   </span>
                   <span
                     className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-white"
@@ -650,7 +659,7 @@ function CatalogView({
   onPageChange: (page: number) => void;
   getTheme: (product: CatalogProduct) => BrandTheme;
 }) {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
 
   return (
     <section className="mx-auto max-w-7xl px-6 py-14">
@@ -701,7 +710,7 @@ function CatalogView({
             <FilterPill
               key={category.id}
               active={selectedCategoryId === category.id}
-              label={category.name}
+              label={getLocalizedCategory(category, language)}
               theme={getBrandTheme(`${category.name} ${category.slug}`)}
               onClick={() => onCategoryChange(category.id)}
             />

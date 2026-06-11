@@ -5,6 +5,7 @@ import { useState } from "react";
 import { NavigationCategory } from "@/lib/categories";
 import { Language, languages } from "@/lib/translations";
 import { useLanguage } from "@/lib/language";
+import { getLocalizedCategory } from "@/lib/localized-data";
 
 export default function SiteHeader({
   categories,
@@ -75,7 +76,7 @@ export default function SiteHeader({
                   href={`/category/${category.slug}`}
                   className="transition hover:text-[var(--brand-mio-beauty-primary)]"
                 >
-                  {category.name}
+                  {getLocalizedCategory(category, language)}
                 </Link>
               </li>
             ))}
@@ -122,7 +123,7 @@ export default function SiteHeader({
                 onClick={() => setMenuOpen(false)}
                 className="block rounded-2xl bg-[var(--brand-mio-beauty-surface)] px-4 py-3"
               >
-                {category.name}
+                {getLocalizedCategory(category, language)}
               </Link>
             ))}
             <Link
