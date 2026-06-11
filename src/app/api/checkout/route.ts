@@ -193,7 +193,7 @@ async function insertOrderWithItems({
   total: number;
   orderItems: PreparedOrderItem[];
 }) {
-  async function insertLegacyItems(orderId: number) {
+  async function insertSkuItems(orderId: number, priceColumn: "unit_price" | "price") {
     return supabase.from("order_items").insert(
       orderItems.map((item) => ({
         order_id: orderId,
@@ -201,10 +201,25 @@ async function insertOrderWithItems({
         sku: item.product_sku,
         product_name: item.product_name,
         quantity: item.quantity,
-        price: item.unit_price,
+        [priceColumn]: item.unit_price,
         total_price: item.total_price,
       }))
     );
+  }
+
+  async function insertCompatibleSkuItems(orderId: number) {
+    const unitPriceResult = await insertSkuItems(orderId, "unit_price");
+
+    if (!unitPriceResult.error || !isSchemaCacheError(unitPriceResult.error)) {
+      return unitPriceResult;
+    }
+
+    logCheckoutError("sku order_items insert with unit_price failed", unitPriceResult.error, {
+      orderId,
+      orderNumber,
+    });
+
+    return insertSkuItems(orderId, "price");
   }
 
   const modernOrderPayload = {
@@ -252,7 +267,7 @@ async function insertOrderWithItems({
     });
 
     if (isSchemaCacheError(modernItemsError)) {
-      const { error: legacyItemsForModernOrderError } = await insertLegacyItems(
+      const { error: legacyItemsForModernOrderError } = await insertCompatibleSkuItems(
         modernOrderResult.data.id
       );
 
@@ -305,7 +320,9 @@ async function insertOrderWithItems({
     throw new CheckoutError("database_error", "Database insert failed.", 500);
   }
 
-  const { error: legacyItemsError } = await insertLegacyItems(legacyOrderResult.data.id);
+  const { error: legacyItemsError } = await insertCompatibleSkuItems(
+    legacyOrderResult.data.id
+  );
 
   if (legacyItemsError) {
     logCheckoutError("legacy order_items insert failed", legacyItemsError, {

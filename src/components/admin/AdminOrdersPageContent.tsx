@@ -42,6 +42,8 @@ const legacyOrderSelect =
   "id,customer_name,phone,address,total_price,status,payment_method,delivery_method,created_at";
 const modernItemSelect =
   "id,order_id,product_name,product_sku,quantity,unit_price,total_price,created_at";
+const skuUnitPriceItemSelect =
+  "id,order_id,product_name,sku,quantity,unit_price,total_price,created_at";
 const legacyItemSelect =
   "id,order_id,product_name,sku,quantity,price,total_price,created_at";
 
@@ -119,7 +121,7 @@ function normalizeLegacyItem(row: Record<string, unknown>): OrderItemRow {
     productName: textValue(row.product_name),
     sku: textValue(row.sku),
     quantity: numberValue(row.quantity),
-    unitPrice: numberValue(row.price),
+    unitPrice: numberValue(row.price ?? row.unit_price),
     totalPrice: numberValue(row.total_price),
   };
 }
@@ -194,6 +196,22 @@ export default function AdminOrdersPageContent() {
 
     if (!modernResult.error) {
       setItems(((modernResult.data || []) as Record<string, unknown>[]).map(normalizeModernItem));
+      setItemsLoading(false);
+      return;
+    }
+
+    const skuUnitPriceResult = await supabase
+      .from("order_items")
+      .select(skuUnitPriceItemSelect)
+      .eq("order_id", order.id)
+      .order("created_at", { ascending: false });
+
+    if (!skuUnitPriceResult.error) {
+      setItems(
+        ((skuUnitPriceResult.data || []) as Record<string, unknown>[]).map(
+          normalizeLegacyItem
+        )
+      );
       setItemsLoading(false);
       return;
     }
