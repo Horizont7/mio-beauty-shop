@@ -55,13 +55,11 @@ export const translations = {
       "В этой категории пока нет активных товаров. Скоро здесь появятся новые продукты.",
     emptyProducts: "Товары не найдены",
     errorTitle: "Что-то пошло не так",
-    fastDiscovery: "Быстрый выбор",
     featuredPriority: "Рекомендуемые",
     footerDescription:
       "Официальный сайт MIO Beauty: бренды MIO BEAUTY, SHINESKIN, MIO BABY и MIO HOME, каталог продукции, вдохновение для ухода и партнерские возможности.",
     futureB2bPlatform: "Партнерство с MIO Beauty",
     hitBadge: "Хит",
-    hitProducts: "Хиты продаж",
     home: "Главная",
     instagram: "Instagram",
     instagramTitle: "MIO Beauty в ежедневных ритуалах",
@@ -70,9 +68,6 @@ export const translations = {
     journalPost2: "Почему пастельная эстетика помогает бренду звучать премиально",
     journalPost3: "Уход для себя, семьи и дома в одном настроении",
     luxuryCatalog: "Каталог MIO Beauty",
-    marketplaceCatalog: "Каталог продукции",
-    marketplaceCatalogTitle:
-      "Выбирайте продукты MIO Beauty по брендам, категориям, новинкам и хитам продаж.",
     marketplacePartnerships: "Партнерство с маркетплейсами",
     menu: "Меню",
     mioCompanyPlatform: "MIO Beauty",
@@ -85,7 +80,6 @@ export const translations = {
       "Получайте новости о новинках, уходе и специальных предложениях MIO Beauty.",
     next: "Далее",
     noCuratedProducts: "Скоро здесь появятся новые продукты.",
-    openMarketplaceCatalog: "Открыть каталог",
     payment: "Оплата",
     platform: "О компании",
     platformHeroEyebrow: "Официальный сайт MIO Beauty",
@@ -124,13 +118,6 @@ export const translations = {
     productUsageEmpty:
       "Рекомендации по применению скоро будут добавлены.",
     relatedProducts: "Похожие продукты",
-    reviews: "Отзывы",
-    review1:
-      "MIO Beauty выглядит нежно и премиально. Продукты приятно держать на полке и хочется использовать каждый день.",
-    review2:
-      "У бренда очень цельное ощущение: мягкие оттенки, аккуратная упаковка и понятный выбор.",
-    review3:
-      "Редкий локальный beauty-бренд с международным уровнем подачи и вниманием к деталям.",
     searchBeauty: "Поиск по сайту",
     searchProducts: "Найти продукт или бренд",
     service: "Сервис",
@@ -226,13 +213,11 @@ export const translations = {
       "Bu kategoriyada hozircha faol mahsulotlar yo'q. Tez orada yangi mahsulotlar qo'shiladi.",
     emptyProducts: "Mahsulotlar topilmadi",
     errorTitle: "Xatolik yuz berdi",
-    fastDiscovery: "Tez tanlash",
     featuredPriority: "Tavsiya etilganlar",
     footerDescription:
       "MIO Beauty rasmiy sayti: MIO BEAUTY, SHINESKIN, MIO BABY va MIO HOME brendlari, mahsulotlar katalogi, parvarish bo'yicha ilhom va hamkorlik imkoniyatlari.",
     futureB2bPlatform: "MIO Beauty bilan hamkorlik",
     hitBadge: "Hit",
-    hitProducts: "Hit mahsulotlar",
     home: "Bosh sahifa",
     instagram: "Instagram",
     instagramTitle: "MIO Beauty kundalik ritualda",
@@ -241,9 +226,6 @@ export const translations = {
     journalPost2: "Pastel estetika brendni qanday premium ko'rsatadi",
     journalPost3: "O'zingiz, oilangiz va uyingiz uchun bir xil kayfiyatdagi parvarish",
     luxuryCatalog: "MIO Beauty katalogi",
-    marketplaceCatalog: "Mahsulotlar katalogi",
-    marketplaceCatalogTitle:
-      "MIO Beauty mahsulotlarini brend, kategoriya, yangilik va hitlar bo'yicha tanlang.",
     marketplacePartnerships: "Marketplace hamkorliklari",
     menu: "Menyu",
     mioCompanyPlatform: "MIO Beauty",
@@ -256,7 +238,6 @@ export const translations = {
       "MIO Beauty yangiliklari, parvarish bo'yicha maslahatlar va maxsus takliflarni qabul qiling.",
     next: "Keyingi",
     noCuratedProducts: "Tez orada yangi mahsulotlar qo'shiladi.",
-    openMarketplaceCatalog: "Katalogni ochish",
     payment: "To'lov",
     platform: "Kompaniya haqida",
     platformHeroEyebrow: "MIO Beauty rasmiy sayti",
@@ -295,13 +276,6 @@ export const translations = {
     productUsageEmpty:
       "Qo'llash bo'yicha tavsiyalar tez orada qo'shiladi.",
     relatedProducts: "O'xshash mahsulotlar",
-    reviews: "Sharhlar",
-    review1:
-      "MIO Beauty nafis va premium ko'rinadi. Mahsulotlarni javonda ko'rish ham, har kuni ishlatish ham yoqimli.",
-    review2:
-      "Brend juda yaxlit: yumshoq ranglar, tartibli qadoq va tushunarli tanlov.",
-    review3:
-      "Xalqaro darajadagi ko'rinish va detallarga e'tibor berilgan kamyob mahalliy beauty brend.",
     searchBeauty: "Saytdan qidirish",
     searchProducts: "Mahsulot yoki brendni qidirish",
     service: "Servis",

@@ -282,31 +282,24 @@ export default function HomePageContent({
       <VideoHighlightsSection highlights={videoHighlights} />
       <PlatformOverview />
       <BrandUniverse categories={displayBrands} />
-      <MarketplaceGateway
-        products={products}
-        newCount={newProducts.length}
-        hitCount={hitProducts.length}
-        categories={categories}
-        onOpenCatalog={openCatalog}
-      />
       <ProductSection
         id="new-arrivals"
-        label={t("newArrivals")}
-        title={t("newArrivalsTitle")}
+        label={t("beautyEdit")}
+        title={t("newArrivals")}
+        subtitle={t("newArrivalsTitle")}
         products={newProducts.slice(0, 4)}
         getTheme={themeForProduct}
         action={openCatalog}
       />
       <ProductSection
-        label={t("bestSellers")}
-        title={t("bestSellersTitle")}
+        label={t("featuredPriority")}
+        title={t("bestSellers")}
+        subtitle={t("bestSellersTitle")}
         products={hitProducts.slice(0, 4)}
         getTheme={themeForProduct}
-        tone="dark"
         action={openCatalog}
       />
       <BrandStory />
-      <Reviews />
       <Newsletter />
     </>
   );
@@ -464,108 +457,21 @@ function PlatformOverview() {
   );
 }
 
-function MarketplaceGateway({
-  products,
-  newCount,
-  hitCount,
-  categories,
-  onOpenCatalog,
-}: {
-  products: CatalogProduct[];
-  newCount: number;
-  hitCount: number;
-  categories: NavigationCategory[];
-  onOpenCatalog: () => void;
-}) {
-  const { language, t } = useLanguage();
-
-  return (
-    <section className="mx-auto max-w-7xl px-6 pb-20">
-      <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-        <div className="rounded-[40px] bg-[#211f1e] p-8 text-white shadow-[0_30px_100px_rgba(45,45,45,0.16)] md:p-10">
-          <p className="text-xs font-semibold uppercase tracking-[0.32em] text-white/45">
-            {t("marketplaceCatalog")}
-          </p>
-          <h2 className="mt-4 max-w-2xl text-4xl font-semibold leading-tight sm:text-5xl">
-            {t("marketplaceCatalogTitle")}
-          </h2>
-          <div className="mt-8 grid gap-4 sm:grid-cols-3">
-            {[
-              [products.length, t("activeProducts")],
-              [newCount, t("newArrivals")],
-              [hitCount, t("hitProducts")],
-            ].map(([value, label]) => (
-              <div
-                key={label}
-                className="rounded-3xl border border-white/10 bg-white/8 p-5"
-              >
-                <p className="text-3xl font-semibold">{value}</p>
-                <p className="mt-1 text-xs uppercase tracking-[0.18em] text-white/50">
-                  {label}
-                </p>
-              </div>
-            ))}
-          </div>
-          <button
-            type="button"
-            onClick={onOpenCatalog}
-            className="mt-9 rounded-full bg-white px-8 py-4 text-sm font-semibold uppercase tracking-[0.16em] text-[var(--brand-ink)]"
-          >
-            {t("openMarketplaceCatalog")}
-          </button>
-        </div>
-
-        <div className="rounded-[40px] border border-black/5 bg-white p-8 shadow-[0_18px_70px_rgba(45,45,45,0.06)] md:p-10">
-          <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[var(--brand-mio-beauty-primary)]">
-            {t("fastDiscovery")}
-          </p>
-          <div className="mt-6 space-y-3">
-            {categories.slice(0, 6).map((category) => {
-              const theme = getBrandTheme(
-                `${category.name} ${category.slug}`
-              );
-
-              return (
-                <Link
-                  key={category.id}
-                  href={`/category/${category.slug}`}
-                  className="flex items-center justify-between rounded-3xl border border-black/5 px-5 py-4 transition hover:-translate-y-0.5"
-                  style={{ background: theme.surface }}
-                >
-                  <span className="font-semibold text-[var(--brand-ink)]">
-                    {getLocalizedCategory(category, language)}
-                  </span>
-                  <span
-                    className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-white"
-                    style={{ background: theme.primary }}
-                  >
-                    {t("shop")}
-                  </span>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 function ProductSection({
   id,
   label,
   title,
+  subtitle,
   products,
   getTheme,
-  tone,
   action,
 }: {
   id?: string;
   label: string;
   title: string;
+  subtitle: string;
   products: CatalogProduct[];
   getTheme: (product: CatalogProduct) => BrandTheme;
-  tone?: "dark";
   action: () => void;
 }) {
   const { t } = useLanguage();
@@ -573,43 +479,33 @@ function ProductSection({
   return (
     <section
       id={id}
-      className={tone === "dark" ? "bg-[#211f1e] py-24" : "py-20"}
+      className="relative overflow-hidden bg-[linear-gradient(135deg,#fffaf7_0%,#f8ebe5_45%,#fff_100%)] py-24"
     >
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.7),rgba(255,250,247,0)_42%,rgba(238,163,145,0.12))]" />
       <div className="mx-auto max-w-7xl px-6">
-        <div className="mb-12 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p
-              className={`text-xs font-semibold uppercase tracking-[0.32em] ${
-                tone === "dark"
-                  ? "text-white/50"
-                  : "text-[var(--brand-mio-beauty-primary)]"
-              }`}
-            >
+        <div className="relative mb-14 flex flex-col gap-8 sm:flex-row sm:items-end sm:justify-between">
+          <div className="max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[#b97667]">
               {label}
             </p>
-            <h2
-              className={`mt-4 text-4xl font-semibold sm:text-5xl ${
-                tone === "dark" ? "text-white" : "text-[var(--brand-ink)]"
-              }`}
-            >
+            <h2 className="mt-4 text-5xl font-semibold leading-tight text-[var(--brand-ink)] sm:text-6xl">
               {title}
             </h2>
+            <p className="mt-5 max-w-2xl text-base leading-8 text-[var(--brand-muted)] sm:text-lg">
+              {subtitle}
+            </p>
           </div>
           <button
             type="button"
             onClick={action}
-            className={`rounded-full px-7 py-3 text-sm font-semibold uppercase tracking-[0.16em] transition ${
-              tone === "dark"
-                ? "bg-white text-[var(--brand-ink)]"
-                : "bg-[var(--brand-ink)] text-white"
-            }`}
+            className="w-fit rounded-full border border-[#d7b2a7] bg-white/80 px-7 py-3 text-sm font-semibold uppercase tracking-[0.16em] text-[var(--brand-ink)] shadow-[0_16px_45px_rgba(180,118,103,0.16)] backdrop-blur transition duration-300 hover:-translate-y-0.5 hover:border-[#EEA391] hover:bg-[#EEA391] hover:text-white"
           >
             {t("viewAll")}
           </button>
         </div>
 
         {products.length > 0 ? (
-          <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="relative grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {products.map((product) => (
               <ProductCard
                 key={product.id}
@@ -619,7 +515,7 @@ function ProductSection({
             ))}
           </div>
         ) : (
-          <div className="rounded-[30px] bg-white/80 p-10 text-center text-[var(--brand-muted)]">
+          <div className="relative rounded-[30px] border border-white/70 bg-white/80 p-10 text-center text-[var(--brand-muted)] shadow-[0_24px_70px_rgba(180,118,103,0.12)] backdrop-blur">
             {t("noCuratedProducts")}
           </div>
         )}
@@ -818,31 +714,6 @@ function BrandStory() {
                 {value}
               </p>
             </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function Reviews() {
-  const { t } = useLanguage();
-  const reviews = [t("review1"), t("review2"), t("review3")];
-
-  return (
-    <section className="bg-[#f8f3ef] py-24">
-      <div className="mx-auto max-w-7xl px-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[var(--brand-mio-beauty-primary)]">
-          {t("reviews")}
-        </p>
-        <div className="mt-10 grid gap-6 md:grid-cols-3">
-          {reviews.map((review) => (
-            <blockquote
-              key={review}
-              className="rounded-[30px] bg-white p-8 text-lg leading-9 text-[var(--brand-ink)] shadow-sm"
-            >
-              &quot;{review}&quot;
-            </blockquote>
           ))}
         </div>
       </div>

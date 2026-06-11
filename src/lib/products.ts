@@ -14,6 +14,7 @@ export type CategoryProduct = {
   brand: string | null;
   image: string | null;
   price: number | null;
+  old_price?: number | null;
   category_id: number | null;
   is_new: boolean;
   is_hit: boolean;
@@ -33,6 +34,7 @@ export type CatalogProduct = {
   brand: string | null;
   image: string | null;
   price: number | null;
+  old_price?: number | null;
   category_id: number | null;
   is_new: boolean;
   is_hit: boolean;
@@ -68,7 +70,7 @@ export async function getActiveProductsByCategoryId(categoryId: number) {
   const { data, error } = await supabase
     .from("products")
     .select(
-      "id,slug,name_ru,name_uz,description_ru,description_uz,seo_title_ru,seo_title_uz,seo_description_ru,seo_description_uz,brand,image,price,category_id,is_new,is_hit"
+      "id,slug,name_ru,name_uz,description_ru,description_uz,seo_title_ru,seo_title_uz,seo_description_ru,seo_description_uz,brand,image,price,old_price,category_id,is_new,is_hit"
     )
     .eq("category_id", categoryId)
     .eq("active", true)
@@ -144,7 +146,7 @@ export async function getRelatedProducts(
   const { data, error } = await supabase
     .from("products")
     .select(
-      "id,slug,name_ru,name_uz,description_ru,description_uz,seo_title_ru,seo_title_uz,seo_description_ru,seo_description_uz,brand,image,price,category_id,is_new,is_hit"
+      "id,slug,name_ru,name_uz,description_ru,description_uz,seo_title_ru,seo_title_uz,seo_description_ru,seo_description_uz,brand,image,price,old_price,category_id,is_new,is_hit"
     )
     .eq("category_id", categoryId)
     .eq("active", true)
@@ -163,7 +165,7 @@ export async function getActiveCatalogProducts() {
   const { data, error } = await supabase
     .from("products")
     .select(
-      "id,slug,name_ru,name_uz,description_ru,description_uz,seo_title_ru,seo_title_uz,seo_description_ru,seo_description_uz,brand,image,price,category_id,is_new,is_hit"
+      "id,slug,name_ru,name_uz,description_ru,description_uz,seo_title_ru,seo_title_uz,seo_description_ru,seo_description_uz,brand,image,price,old_price,category_id,is_new,is_hit"
     )
     .eq("active", true)
     .order("sort_order", { ascending: true, nullsFirst: false });
@@ -176,7 +178,7 @@ export async function getActiveCatalogProducts() {
     const fallback = await supabase
       .from("products")
       .select(
-        "id,slug,name_ru,name_uz,description_ru,description_uz,seo_title_ru,seo_title_uz,seo_description_ru,seo_description_uz,brand,image,price,category_id,is_new"
+        "id,slug,name_ru,name_uz,description_ru,description_uz,seo_title_ru,seo_title_uz,seo_description_ru,seo_description_uz,brand,image,price,old_price,category_id,is_new"
       )
       .eq("active", true)
       .order("sort_order", { ascending: true, nullsFirst: false });
