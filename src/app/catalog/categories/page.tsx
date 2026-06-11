@@ -13,20 +13,20 @@ export default async function CatalogCategoriesPage() {
   return (
     <main className="min-h-screen bg-[var(--background)]">
       <SiteHeader categories={categories} />
-      <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-16">
-        <div className="mb-8">
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#b97667]">
+      <section className="mx-auto max-w-7xl px-4 pb-28 pt-5 sm:px-6 sm:py-16">
+        <div className="mb-5 sm:mb-8">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#b97667] sm:text-xs sm:tracking-[0.28em]">
             MIO Beauty
           </p>
-          <h1 className="mt-3 text-4xl font-semibold text-[var(--brand-ink)] sm:text-6xl">
+          <h1 className="mt-2 text-3xl font-semibold text-[var(--brand-ink)] sm:mt-3 sm:text-6xl">
             Категории
           </h1>
-          <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--brand-muted)]">
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--brand-muted)] sm:mt-4 sm:text-base sm:leading-7">
             Активные направления и бренды, которые обновляются из Supabase.
           </p>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
           {categories.map((category) => {
             const theme = getBrandTheme(`${category.name} ${category.slug}`);
 
@@ -34,7 +34,7 @@ export default async function CatalogCategoriesPage() {
               <Link
                 key={category.id}
                 href={`/category/${category.slug}`}
-                className="group overflow-hidden rounded-[24px] border border-white/80 bg-white/90 shadow-[0_20px_60px_rgba(112,72,61,0.1)] transition duration-300 hover:-translate-y-1"
+                className="group overflow-hidden rounded-[20px] border border-white/80 bg-white/90 shadow-[0_16px_45px_rgba(112,72,61,0.08)] transition duration-300 hover:-translate-y-1 sm:rounded-[24px] sm:shadow-[0_20px_60px_rgba(112,72,61,0.1)]"
               >
                 <div
                   className="relative aspect-[1.15/1] overflow-hidden"
@@ -50,18 +50,18 @@ export default async function CatalogCategoriesPage() {
                     />
                   ) : (
                     <div
-                      className="flex h-full items-center justify-center text-3xl font-black tracking-[0.22em]"
+                      className="flex h-full items-center justify-center text-2xl font-black tracking-[0.18em] sm:text-3xl sm:tracking-[0.22em]"
                       style={{ color: theme.primary }}
                     >
                       MIO
                     </div>
                   )}
                 </div>
-                <div className="p-5">
-                  <h2 className="text-xl font-semibold text-[var(--brand-ink)]">
+                <div className="p-3.5 sm:p-5">
+                  <h2 className="text-base font-semibold text-[var(--brand-ink)] sm:text-xl">
                     {category.name_ru || category.name_uz || category.name}
                   </h2>
-                  <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-[#b97667]">
+                  <p className="mt-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#b97667] sm:mt-3 sm:text-xs sm:tracking-[0.18em]">
                     Смотреть
                   </p>
                 </div>

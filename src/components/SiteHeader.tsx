@@ -6,6 +6,7 @@ import { NavigationCategory } from "@/lib/categories";
 import { Language, languages } from "@/lib/translations";
 import { useLanguage } from "@/lib/language";
 import { getLocalizedCategory } from "@/lib/localized-data";
+import MobileBottomNavigation from "@/components/MobileBottomNavigation";
 
 export default function SiteHeader({
   categories,
@@ -16,7 +17,8 @@ export default function SiteHeader({
   const { language, setLanguage, t } = useLanguage();
 
   return (
-    <header className="sticky top-0 z-50 border-b border-black/5 bg-white/85 backdrop-blur-xl">
+    <>
+    <header className="sticky top-0 z-50 border-b border-black/5 bg-white/90 backdrop-blur-xl">
       <div className="border-b border-black/5 bg-[var(--brand-mio-beauty-surface)]/70">
         <div className="mx-auto flex h-9 max-w-7xl items-center justify-end px-4 text-xs font-medium uppercase tracking-[0.18em] text-[var(--brand-muted)] sm:justify-between sm:px-5">
           <span className="hidden sm:inline">{t("platformHeroEyebrow")}</span>
@@ -42,7 +44,7 @@ export default function SiteHeader({
         </div>
       </div>
 
-      <div className="mx-auto grid max-w-7xl grid-cols-[auto_1fr_auto] items-center gap-3 px-4 py-3 sm:gap-5 sm:px-5 sm:py-5">
+      <div className="mx-auto grid max-w-7xl grid-cols-[auto_1fr_auto] items-center gap-3 px-4 py-2.5 sm:gap-5 sm:px-5 sm:py-5">
         <button
           type="button"
           onClick={() => setMenuOpen((current) => !current)}
@@ -106,10 +108,10 @@ export default function SiteHeader({
         </div>
       </div>
 
-      <div className="px-4 pb-3 md:hidden">
+      <div className="sticky top-0 px-4 pb-3 md:hidden">
         <Link
           href="/catalog/products"
-          className="flex h-11 items-center rounded-full border border-[#f0c7bc] bg-white px-4 text-sm font-medium text-[var(--brand-muted)] shadow-[0_10px_26px_rgba(180,118,103,0.12)]"
+          className="flex h-11 items-center rounded-full border border-[#f0c7bc] bg-white px-4 text-sm font-semibold text-[var(--brand-muted)] shadow-[0_10px_26px_rgba(180,118,103,0.12)]"
         >
           {t("mobileSearchPlaceholder")}
         </Link>
@@ -146,5 +148,7 @@ export default function SiteHeader({
         </nav>
       )}
     </header>
+    <MobileBottomNavigation />
+    </>
   );
 }

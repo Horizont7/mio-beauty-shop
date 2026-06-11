@@ -43,6 +43,7 @@ export const translations = {
     categoryNotFoundMessage:
       "Эта категория временно недоступна или была скрыта.",
     connect: "Контакты",
+    close: "Закрыть",
     dealerAccess: "Стать партнером",
     delivery: "Доставка",
     discover: "Смотреть",
@@ -59,6 +60,7 @@ export const translations = {
     featuredPriority: "Рекомендуемые",
     footerDescription:
       "Официальный сайт MIO Beauty: бренды MIO BEAUTY, SHINESKIN, MIO BABY и MIO HOME, каталог продукции, вдохновение для ухода и партнерские возможности.",
+    filters: "Фильтры",
     futureB2bPlatform: "Партнерство с MIO Beauty",
     hitBadge: "Хит",
     home: "Главная",
@@ -127,6 +129,7 @@ export const translations = {
     shop: "Каталог",
     shopCatalog: "Перейти в каталог",
     showing: "Показано",
+    sort: "Сортировка",
     inStock: "В наличии",
     outOfStock: "Нет в наличии",
     buyNow: "Купить сейчас",
@@ -204,6 +207,7 @@ export const translations = {
     categoryNotFoundMessage:
       "Bu kategoriya vaqtincha mavjud emas yoki yashirilgan.",
     connect: "Aloqa",
+    close: "Yopish",
     dealerAccess: "Hamkor bo'lish",
     delivery: "Yetkazib berish",
     discover: "Ko'rish",
@@ -220,6 +224,7 @@ export const translations = {
     featuredPriority: "Tavsiya etilganlar",
     footerDescription:
       "MIO Beauty rasmiy sayti: MIO BEAUTY, SHINESKIN, MIO BABY va MIO HOME brendlari, mahsulotlar katalogi, parvarish bo'yicha ilhom va hamkorlik imkoniyatlari.",
+    filters: "Filtrlar",
     futureB2bPlatform: "MIO Beauty bilan hamkorlik",
     hitBadge: "Hit",
     home: "Bosh sahifa",
@@ -288,6 +293,7 @@ export const translations = {
     shop: "Katalog",
     shopCatalog: "Katalogga o'tish",
     showing: "Ko'rsatilmoqda",
+    sort: "Saralash",
     inStock: "Mavjud",
     outOfStock: "Mavjud emas",
     buyNow: "Hozir sotib olish",

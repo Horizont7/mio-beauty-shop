@@ -25,10 +25,10 @@ function HighlightCover({
     <button
       type="button"
       onClick={onOpen}
-      className="group w-[148px] shrink-0 text-left sm:w-[172px]"
+      className="group w-[108px] shrink-0 text-left sm:w-[172px]"
     >
       <div className="rounded-full bg-[linear-gradient(135deg,#EEA391,#f8e0d8,#211f1e)] p-[2px] shadow-[0_18px_50px_rgba(238,163,145,0.22)] transition duration-500 group-hover:-translate-y-1">
-        <div className="relative aspect-square overflow-hidden rounded-full border-[6px] border-white bg-[#f7eee9]">
+        <div className="relative aspect-square overflow-hidden rounded-full border-[4px] border-white bg-[#f7eee9] sm:border-[6px]">
           {highlight.cover_image ? (
             <>
               <div
@@ -54,12 +54,12 @@ function HighlightCover({
               MIO
             </div>
           )}
-          <span className="absolute bottom-3 right-3 flex h-10 w-10 items-center justify-center rounded-full bg-white/92 text-[10px] font-bold uppercase tracking-[0.08em] text-[#B96C5C] shadow-lg backdrop-blur">
+          <span className="absolute bottom-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/92 text-[9px] font-bold uppercase tracking-[0.08em] text-[#B96C5C] shadow-lg backdrop-blur sm:bottom-3 sm:right-3 sm:h-10 sm:w-10 sm:text-[10px]">
             Play
           </span>
         </div>
       </div>
-      <p className="mt-4 line-clamp-2 text-center text-sm font-semibold leading-5 text-[var(--brand-ink)]">
+      <p className="mt-2 line-clamp-2 text-center text-xs font-semibold leading-4 text-[var(--brand-ink)] sm:mt-4 sm:text-sm sm:leading-5">
         {localizedHighlight.title}
       </p>
     </button>
@@ -77,25 +77,25 @@ export default function VideoHighlightsSection({
     : null;
 
   return (
-    <section className="border-y border-[#f1d4cc]/70 bg-[#fffaf8] py-14">
-      <div className="mx-auto max-w-7xl px-6">
-        <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <section className="border-y border-[#f1d4cc]/70 bg-[#fffaf8] py-7 sm:py-14">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        <div className="mb-5 flex flex-col gap-3 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[#B96C5C]">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#B96C5C] sm:text-xs sm:tracking-[0.32em]">
               {t("videoBlogEyebrow")}
             </p>
-            <h2 className="mt-3 text-3xl font-semibold text-[var(--brand-ink)] sm:text-4xl">
+            <h2 className="mt-2 text-2xl font-semibold text-[var(--brand-ink)] sm:mt-3 sm:text-4xl">
               {t("videoBlogHeading")}
             </h2>
           </div>
-          <p className="max-w-md text-sm leading-6 text-[var(--brand-muted)]">
+          <p className="hidden max-w-md text-sm leading-6 text-[var(--brand-muted)] sm:block">
             {t("videoBlogDescription")}
           </p>
         </div>
 
         {highlights.length > 0 ? (
-          <div className="-mx-6 overflow-x-auto px-6 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <div className="flex gap-6">
+          <div className="-mx-4 overflow-x-auto px-4 pb-3 [scrollbar-width:none] sm:-mx-6 sm:px-6 [&::-webkit-scrollbar]:hidden">
+            <div className="flex gap-4 sm:gap-6">
               {highlights.map((highlight) => (
                 <HighlightCover
                   key={highlight.id}

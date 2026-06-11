@@ -124,9 +124,9 @@ export default function ProductDetailContent({
     return (
       <main className="min-h-screen bg-[var(--background)]">
         <SiteHeader categories={categories} />
-        <section className="mx-auto max-w-7xl px-6 py-20">
-          <div className="rounded-[34px] bg-white p-10 text-center shadow-[0_20px_80px_rgba(45,45,45,0.08)]">
-            <h1 className="text-3xl font-semibold text-[var(--brand-ink)]">
+        <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-20">
+          <div className="rounded-[24px] bg-white p-6 text-center shadow-[0_20px_80px_rgba(45,45,45,0.08)] sm:rounded-[34px] sm:p-10">
+            <h1 className="text-2xl font-semibold text-[var(--brand-ink)] sm:text-3xl">
               {t("productNotFound")}
             </h1>
             <p className="mt-3 text-[var(--brand-muted)]">
@@ -143,10 +143,10 @@ export default function ProductDetailContent({
     <main className="min-h-screen bg-[var(--background)]">
       <SiteHeader categories={categories} />
 
-      <section className="mx-auto grid max-w-7xl gap-10 px-6 py-10 lg:grid-cols-[1.05fr_0.95fr] lg:py-16">
+      <section className="mx-auto grid max-w-7xl gap-5 px-4 pb-6 pt-5 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10 lg:py-16">
         <div>
           <div
-            className="relative flex aspect-square items-center justify-center overflow-hidden rounded-[34px] border border-[#f1d4cc] shadow-[0_24px_90px_rgba(238,163,145,0.16)]"
+            className="relative flex aspect-square items-center justify-center overflow-hidden rounded-[24px] border border-[#f1d4cc] shadow-[0_18px_60px_rgba(238,163,145,0.14)] sm:rounded-[34px] sm:shadow-[0_24px_90px_rgba(238,163,145,0.16)]"
             style={{ background: theme.surface }}
           >
             {selectedImage ? (
@@ -156,7 +156,7 @@ export default function ProductDetailContent({
                     selectedImageLoaded ? "opacity-0" : "animate-pulse opacity-100"
                   }`}
                 />
-                <div className="absolute inset-8 md:inset-14">
+                <div className="absolute inset-5 sm:inset-8 md:inset-14">
                   <Image
                     src={selectedImage}
                     alt={localizedProduct.name}
@@ -173,7 +173,7 @@ export default function ProductDetailContent({
               </>
             ) : (
               <div
-                className="text-5xl font-extrabold tracking-[0.35em]"
+                className="text-4xl font-extrabold tracking-[0.28em] sm:text-5xl sm:tracking-[0.35em]"
                 style={{ color: theme.primary }}
               >
                 MIO
@@ -182,7 +182,7 @@ export default function ProductDetailContent({
           </div>
 
           {images.length > 1 && (
-            <div className="mt-4 grid grid-cols-4 gap-3 sm:grid-cols-5">
+            <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] sm:grid sm:grid-cols-5 sm:gap-3 [&::-webkit-scrollbar]:hidden">
               {images.map((image) => (
                 <button
                   key={image}
@@ -193,7 +193,7 @@ export default function ProductDetailContent({
                     setSelectedImage(image);
                     setSelectedImageLoaded(Boolean(loadedThumbnails[image]));
                   }}
-                  className={`relative aspect-square overflow-hidden rounded-2xl border bg-white transition hover:border-[#EEA391] ${
+                  className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl border bg-white transition hover:border-[#EEA391] sm:h-auto sm:w-auto sm:aspect-square ${
                     selectedImage === image
                       ? "border-[#EEA391]"
                       : "border-black/10"
@@ -227,15 +227,15 @@ export default function ProductDetailContent({
           )}
         </div>
 
-        <div className="flex flex-col justify-center rounded-[34px] bg-white/80 p-6 shadow-[0_20px_80px_rgba(45,45,45,0.06)] backdrop-blur md:p-8">
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#B96C5C]">
+        <div className="flex flex-col justify-center rounded-[24px] bg-white/85 p-5 shadow-[0_16px_55px_rgba(45,45,45,0.06)] backdrop-blur sm:rounded-[34px] md:p-8">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#B96C5C] sm:text-xs sm:tracking-[0.28em]">
             {category?.name || product.brand || "MIO Beauty"}
           </p>
-          <h1 className="mt-4 text-3xl font-semibold leading-tight text-[var(--brand-ink)] sm:text-5xl">
+          <h1 className="mt-3 text-2xl font-semibold leading-tight text-[var(--brand-ink)] sm:mt-4 sm:text-5xl">
             {localizedProduct.name}
           </h1>
 
-          <div className="mt-6 flex flex-wrap items-center gap-2">
+          <div className="mt-4 flex flex-wrap items-center gap-2 sm:mt-6">
             {product.is_new && (
               <span className="rounded-full bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--brand-ink)] shadow-sm">
                 {t("newBadge")}
@@ -249,28 +249,28 @@ export default function ProductDetailContent({
             <ProductStatus product={product} />
           </div>
 
-          <div className="mt-8 flex flex-wrap items-end gap-4">
-            <p className="text-3xl font-bold text-[#B96C5C]">
+          <div className="mt-5 flex flex-wrap items-end gap-3 sm:mt-8 sm:gap-4">
+            <p className="text-2xl font-bold text-[#B96C5C] sm:text-3xl">
               {price || t("priceOnRequest")}
             </p>
             {oldPrice && (
-              <p className="pb-1 text-xl font-semibold text-[var(--brand-muted)] line-through">
+              <p className="pb-1 text-base font-semibold text-[var(--brand-muted)] line-through sm:text-xl">
                 {oldPrice}
               </p>
             )}
           </div>
 
           {specs.length > 0 && (
-            <div className="mt-7 grid gap-3 sm:grid-cols-2">
+            <div className="mt-5 grid grid-cols-2 gap-2 sm:mt-7 sm:gap-3">
               {specs.map((item) => (
                 <div
                   key={item.label}
-                  className="rounded-2xl border border-[#f1d4cc] bg-[#fff8f6] px-4 py-3"
+                  className="rounded-2xl border border-[#f1d4cc] bg-[#fff8f6] px-3 py-3 sm:px-4"
                 >
                   <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#B96C5C]">
                     {item.label}
                   </p>
-                  <p className="mt-1 text-sm font-semibold text-[var(--brand-ink)]">
+                  <p className="mt-1 text-xs font-semibold text-[var(--brand-ink)] sm:text-sm">
                     {item.value}
                   </p>
                 </div>
@@ -278,7 +278,7 @@ export default function ProductDetailContent({
             </div>
           )}
 
-          <div className="mt-8 grid gap-3 sm:grid-cols-[1fr_auto]">
+          <div className="mt-6 hidden gap-3 sm:grid sm:grid-cols-[1fr_auto]">
             <button
               type="button"
               className="rounded-full bg-[#EEA391] px-8 py-4 text-sm font-semibold uppercase tracking-[0.16em] text-white shadow-lg shadow-[#EEA391]/25 transition hover:-translate-y-0.5 hover:bg-[#df8f7c]"
@@ -296,15 +296,15 @@ export default function ProductDetailContent({
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-6 py-8">
-        <div className="rounded-[28px] border border-[#f1d4cc] bg-white p-5 shadow-[0_18px_70px_rgba(238,163,145,0.09)] md:p-8">
-          <div className="flex flex-wrap gap-2 border-b border-black/5 pb-5">
+      <section className="mx-auto max-w-7xl px-4 py-5 sm:px-6 sm:py-8">
+        <div className="rounded-[22px] border border-[#f1d4cc] bg-white p-4 shadow-[0_18px_70px_rgba(238,163,145,0.09)] sm:rounded-[28px] md:p-8">
+          <div className="flex gap-2 overflow-x-auto border-b border-black/5 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
-                className={`rounded-full px-5 py-2 text-sm font-semibold transition ${
+                className={`h-10 shrink-0 rounded-full px-4 text-sm font-semibold transition sm:px-5 ${
                   activeTab === tab.id
                     ? "text-white"
                     : "bg-[#fff8f6] text-[var(--brand-ink)]"
@@ -317,30 +317,31 @@ export default function ProductDetailContent({
               </button>
             ))}
           </div>
-          <p className="mt-6 whitespace-pre-line text-base leading-8 text-[var(--brand-muted)]">
+          <p className="mt-5 whitespace-pre-line text-sm leading-7 text-[var(--brand-muted)] sm:mt-6 sm:text-base sm:leading-8">
             {tabs.find((tab) => tab.id === activeTab)?.content}
           </p>
         </div>
       </section>
 
       {relatedProducts.length > 0 && (
-        <section className="mx-auto max-w-7xl px-6 py-16">
-          <div className="mb-10 flex items-end justify-between gap-4">
+        <section className="mx-auto max-w-7xl px-4 pb-28 pt-8 sm:px-6 sm:py-16">
+          <div className="mb-5 flex items-end justify-between gap-4 sm:mb-10">
             <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#B96C5C]">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#B96C5C] sm:text-xs sm:tracking-[0.28em]">
               {t("relatedProducts")}
             </p>
-              <h2 className="mt-2 text-3xl font-semibold text-[var(--brand-ink)]">
+              <h2 className="mt-2 text-2xl font-semibold text-[var(--brand-ink)] sm:text-3xl">
                 {language === "ru" ? "Похожие продукты" : "O'xshash mahsulotlar"}
               </h2>
             </div>
           </div>
-          <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-7 lg:grid-cols-4">
             {relatedProducts.map((item) => (
               <ProductCard
                 key={item.id}
                 product={item}
                 theme={getBrandTheme(`${item.brand || ""} ${category?.name || ""}`)}
+                compact
               />
             ))}
           </div>
@@ -348,6 +349,24 @@ export default function ProductDetailContent({
       )}
 
       <LuxuryFooter categories={categories} />
+      <div className="fixed inset-x-0 bottom-[4.6rem] z-40 border-t border-[#f3d2c8] bg-white/95 px-4 py-3 shadow-[0_-14px_35px_rgba(180,118,103,0.12)] backdrop-blur md:hidden">
+        <div className="mx-auto flex max-w-md items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-bold text-[#B96C5C]">
+              {price || t("priceOnRequest")}
+            </p>
+            <p className="truncate text-xs text-[var(--brand-muted)]">
+              {localizedProduct.name}
+            </p>
+          </div>
+          <button
+            type="button"
+            className="h-12 rounded-full bg-[#EEA391] px-5 text-sm font-semibold text-white shadow-lg shadow-[#EEA391]/20"
+          >
+            {t("addToCart")}
+          </button>
+        </div>
+      </div>
     </main>
   );
 }

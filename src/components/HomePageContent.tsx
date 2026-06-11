@@ -382,7 +382,6 @@ export default function HomePageContent({
       <BrandStory />
       <Newsletter />
       <div className="h-24 md:hidden" />
-      <MobileBottomNavigation />
     </>
   );
 }
@@ -549,16 +548,16 @@ function BrandUniverse({
   const { language, t } = useLanguage();
 
   return (
-    <section className="mx-auto max-w-7xl px-6 py-24">
-      <div className="mb-12 max-w-2xl">
-        <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[var(--brand-mio-beauty-primary)]">
+    <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-24">
+      <div className="mb-6 max-w-2xl sm:mb-12">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--brand-mio-beauty-primary)] sm:text-xs sm:tracking-[0.32em]">
           {t("brandUniverse")}
         </p>
-        <h2 className="mt-4 text-4xl font-semibold text-[var(--brand-ink)] sm:text-5xl">
+        <h2 className="mt-2 text-3xl font-semibold text-[var(--brand-ink)] sm:mt-4 sm:text-5xl">
           {t("brandUniverseTitle")}
         </h2>
       </div>
-      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-2 md:gap-5 xl:grid-cols-4">
         {categories.map((category) => {
           const theme = getBrandTheme(
             `${category.name} ${category.slug}`
@@ -568,25 +567,25 @@ function BrandUniverse({
             <Link
               key={category.id}
               href={`/category/${category.slug}`}
-              className="group min-h-80 overflow-hidden rounded-[34px] border border-black/5 p-7 shadow-[0_20px_80px_rgba(45,45,45,0.06)] transition duration-500 hover:-translate-y-1"
+              className="group min-h-44 overflow-hidden rounded-[22px] border border-black/5 p-4 shadow-[0_16px_45px_rgba(45,45,45,0.05)] transition duration-500 hover:-translate-y-1 sm:min-h-80 sm:rounded-[34px] sm:p-7 sm:shadow-[0_20px_80px_rgba(45,45,45,0.06)]"
               style={{ background: theme.surface }}
             >
               <div
-                className="mb-14 inline-flex h-20 w-20 items-center justify-center rounded-full bg-white/70 text-xl font-extrabold tracking-[0.22em]"
+                className="mb-8 inline-flex h-12 w-12 items-center justify-center rounded-full bg-white/70 text-sm font-extrabold tracking-[0.16em] sm:mb-14 sm:h-20 sm:w-20 sm:text-xl sm:tracking-[0.22em]"
                 style={{ color: theme.primary }}
               >
                 MIO
               </div>
               <h3
-                className="text-3xl font-semibold"
+                className="text-lg font-semibold sm:text-3xl"
                 style={{ color: theme.primary }}
               >
                 {getLocalizedCategory(category, language)}
               </h3>
-              <p className="mt-4 text-sm leading-7 text-[var(--brand-muted)]">
+              <p className="mt-3 line-clamp-3 text-xs leading-5 text-[var(--brand-muted)] sm:mt-4 sm:text-sm sm:leading-7">
                 {t("brandCardText")}
               </p>
-              <span className="mt-8 inline-flex text-xs font-semibold uppercase tracking-[0.18em] text-[var(--brand-ink)]">
+              <span className="mt-5 inline-flex text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--brand-ink)] sm:mt-8 sm:text-xs sm:tracking-[0.18em]">
                 {t("discover")}
               </span>
             </Link>
@@ -615,27 +614,27 @@ function PlatformOverview() {
   ];
 
   return (
-    <section id="platform" className="bg-white py-20">
-      <div className="mx-auto max-w-7xl px-6">
-        <div className="grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-end">
+    <section id="platform" className="bg-white py-10 sm:py-20">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        <div className="grid gap-4 lg:grid-cols-[0.85fr_1.15fr] lg:items-end lg:gap-10">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[var(--brand-mio-beauty-primary)]">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--brand-mio-beauty-primary)] sm:text-xs sm:tracking-[0.32em]">
               {t("platformOverviewEyebrow")}
             </p>
-            <h2 className="mt-4 text-4xl font-semibold leading-tight text-[var(--brand-ink)] sm:text-5xl">
+            <h2 className="mt-2 text-3xl font-semibold leading-tight text-[var(--brand-ink)] sm:mt-4 sm:text-5xl">
               {t("platformOverviewTitle")}
             </h2>
           </div>
-          <p className="text-lg leading-9 text-[var(--brand-muted)]">
+          <p className="text-sm leading-6 text-[var(--brand-muted)] sm:text-lg sm:leading-9">
             {t("platformOverviewText")}
           </p>
         </div>
 
-        <div className="mt-12 grid gap-5 md:grid-cols-3">
+        <div className="mt-6 grid gap-3 md:grid-cols-3 md:gap-5 sm:mt-12">
           {platformPillars.map((pillar, index) => (
             <div
               key={pillar.title}
-              className="rounded-[32px] border border-black/5 p-7 shadow-[0_18px_70px_rgba(45,45,45,0.05)]"
+              className="rounded-[22px] border border-black/5 p-5 shadow-[0_14px_45px_rgba(45,45,45,0.04)] sm:rounded-[32px] sm:p-7 sm:shadow-[0_18px_70px_rgba(45,45,45,0.05)]"
               style={{
                 background: [
                   "var(--brand-mio-beauty-surface)",
@@ -647,7 +646,7 @@ function PlatformOverview() {
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--brand-muted)]">
                 0{index + 1}
               </p>
-              <h3 className="mt-10 text-2xl font-semibold text-[var(--brand-ink)]">
+              <h3 className="mt-5 text-xl font-semibold text-[var(--brand-ink)] sm:mt-10 sm:text-2xl">
                 {pillar.title}
               </h3>
               <p className="mt-4 text-sm leading-7 text-[var(--brand-muted)]">
@@ -731,39 +730,6 @@ function ProductSection({
   );
 }
 
-function MobileBottomNavigation() {
-  const { t } = useLanguage();
-  const items = [
-    { href: "/", label: t("home"), icon: "H" },
-    { href: "/catalog/categories", label: t("catalog"), icon: "C" },
-    { href: "/catalog/products", label: t("search"), icon: "S" },
-    { href: "/cart", label: t("cart"), icon: "B" },
-    { href: "/profile", label: t("profile"), icon: "P" },
-  ];
-
-  return (
-    <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-[#f3cfc4] bg-white/95 px-2 pb-[calc(env(safe-area-inset-bottom)+0.45rem)] pt-2 shadow-[0_-18px_45px_rgba(180,118,103,0.14)] backdrop-blur md:hidden">
-      <div className="mx-auto grid max-w-md grid-cols-5 gap-1">
-        {items.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className="relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-[10px] font-semibold text-[var(--brand-muted)] transition hover:bg-[#fff0eb] hover:text-[#b97667]"
-          >
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#ffe7de] text-[11px] font-black text-[#b97667]">
-              {item.icon}
-            </span>
-            <span>{item.label}</span>
-            {item.href === "/cart" && (
-              <span className="absolute right-4 top-1 hidden h-4 min-w-4 rounded-full bg-[#EEA391] px-1 text-[9px] leading-4 text-white" />
-            )}
-          </Link>
-        ))}
-      </div>
-    </nav>
-  );
-}
-
 function CatalogView({
   categories,
   filteredProducts,
@@ -798,26 +764,26 @@ function CatalogView({
   const { language, t } = useLanguage();
 
   return (
-    <section className="mx-auto max-w-7xl px-6 py-14">
-      <div className="mb-10 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+    <section className="mx-auto max-w-7xl px-4 pb-28 pt-5 sm:px-6 sm:py-14">
+      <div className="mb-5 flex flex-col gap-4 lg:mb-10 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[var(--brand-mio-beauty-primary)]">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--brand-mio-beauty-primary)] sm:text-xs sm:tracking-[0.32em]">
             {t("luxuryCatalog")}
           </p>
-          <h1 className="mt-3 text-5xl font-semibold text-[var(--brand-ink)]">
+          <h1 className="mt-2 text-3xl font-semibold text-[var(--brand-ink)] sm:mt-3 sm:text-5xl">
             {t("beautyEdit")}
           </h1>
         </div>
         <button
           type="button"
           onClick={onBack}
-          className="w-fit rounded-full border border-black/10 bg-white px-7 py-3 text-sm font-semibold uppercase tracking-[0.16em]"
+          className="w-fit rounded-full border border-black/10 bg-white px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] sm:px-7 sm:py-3 sm:text-sm sm:tracking-[0.16em]"
         >
           {t("backToHome")}
         </button>
       </div>
 
-      <div className="mb-8 rounded-[30px] border border-black/5 bg-white p-4 shadow-[0_18px_60px_rgba(45,45,45,0.05)]">
+      <div className="sticky top-[112px] z-30 -mx-4 mb-5 border-y border-[#f3d2c8]/80 bg-[#faf7f5]/95 px-4 py-3 shadow-[0_12px_35px_rgba(180,118,103,0.08)] backdrop-blur md:static md:mx-0 md:mb-8 md:rounded-[30px] md:border-black/5 md:bg-white md:p-4 md:shadow-[0_18px_60px_rgba(45,45,45,0.05)]">
         <div className="grid gap-4 lg:grid-cols-[1fr_auto]">
           <input
             type="search"
@@ -836,7 +802,7 @@ function CatalogView({
             <option value="price-high">{t("priceHigh")}</option>
           </select>
         </div>
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] md:flex-wrap [&::-webkit-scrollbar]:hidden">
           <FilterPill
             active={selectedCategoryId === null}
             label={t("all")}
@@ -858,12 +824,13 @@ function CatalogView({
         {t("showing")} {paginatedProducts.length} /{" "}
         {filteredProducts.length} {t("products")}
       </p>
-      <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-7 lg:grid-cols-3 xl:grid-cols-4">
         {paginatedProducts.map((product) => (
           <ProductCard
             key={product.id}
             product={product}
             theme={getTheme(product)}
+            compact
           />
         ))}
       </div>
@@ -918,7 +885,7 @@ function FilterPill({
     <button
       type="button"
       onClick={onClick}
-      className="rounded-full border px-5 py-2 text-sm font-semibold transition"
+      className="h-10 shrink-0 rounded-full border px-4 text-sm font-semibold transition sm:px-5"
       style={{
         borderColor: theme.primary,
         background: active ? theme.primary : "white",
@@ -935,22 +902,22 @@ function BrandStory() {
   const values = [t("valueCare"), t("valueTrust"), t("valueRitual")];
 
   return (
-    <section className="mx-auto grid max-w-7xl gap-10 px-6 py-24 lg:grid-cols-2">
-      <div className="min-h-[520px] rounded-[42px] bg-[linear-gradient(135deg,var(--brand-mio-beauty-surface),var(--brand-shineskin-surface))]" />
+    <section className="mx-auto grid max-w-7xl gap-6 px-4 py-10 sm:px-6 sm:py-24 lg:grid-cols-2 lg:gap-10">
+      <div className="min-h-[180px] rounded-[26px] bg-[linear-gradient(135deg,var(--brand-mio-beauty-surface),var(--brand-shineskin-surface))] sm:min-h-[520px] sm:rounded-[42px]" />
       <div className="flex flex-col justify-center">
-        <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[var(--brand-mio-beauty-primary)]">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--brand-mio-beauty-primary)] sm:text-xs sm:tracking-[0.32em]">
           {t("brandStory")}
         </p>
-        <h2 className="mt-4 text-5xl font-semibold leading-tight text-[var(--brand-ink)]">
+        <h2 className="mt-2 text-3xl font-semibold leading-tight text-[var(--brand-ink)] sm:mt-4 sm:text-5xl">
           {t("brandStoryTitle")}
         </h2>
-        <p className="mt-6 text-lg leading-9 text-[var(--brand-muted)]">
+        <p className="mt-4 text-sm leading-6 text-[var(--brand-muted)] sm:mt-6 sm:text-lg sm:leading-9">
           {t("brandStoryText")}
         </p>
-        <div className="mt-8 grid gap-4 sm:grid-cols-3">
+        <div className="mt-5 grid grid-cols-3 gap-2 sm:mt-8 sm:gap-4">
           {values.map((value) => (
-            <div key={value} className="rounded-3xl bg-white p-5 shadow-sm">
-              <p className="font-semibold text-[var(--brand-ink)]">
+            <div key={value} className="rounded-2xl bg-white p-3 shadow-sm sm:rounded-3xl sm:p-5">
+              <p className="text-sm font-semibold text-[var(--brand-ink)] sm:text-base">
                 {value}
               </p>
             </div>
@@ -965,15 +932,15 @@ function Newsletter() {
   const { t } = useLanguage();
 
   return (
-    <section className="mx-auto max-w-7xl px-6 pb-10">
-      <div className="rounded-[42px] bg-[var(--brand-mio-beauty-surface)] p-10 text-center md:p-16">
-        <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[var(--brand-mio-beauty-primary)]">
+    <section className="mx-auto max-w-7xl px-4 pb-10 sm:px-6">
+      <div className="rounded-[26px] bg-[var(--brand-mio-beauty-surface)] p-5 text-center sm:rounded-[42px] sm:p-10 md:p-16">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--brand-mio-beauty-primary)] sm:text-xs sm:tracking-[0.32em]">
           {t("newsletter")}
         </p>
-        <h2 className="mx-auto mt-4 max-w-2xl text-4xl font-semibold text-[var(--brand-ink)]">
+        <h2 className="mx-auto mt-2 max-w-2xl text-2xl font-semibold text-[var(--brand-ink)] sm:mt-4 sm:text-4xl">
           {t("newsletterTitle")}
         </h2>
-        <div className="mx-auto mt-8 flex max-w-xl flex-col gap-3 rounded-full bg-white p-2 shadow-sm sm:flex-row">
+        <div className="mx-auto mt-5 flex max-w-xl flex-col gap-3 rounded-[22px] bg-white p-2 shadow-sm sm:mt-8 sm:flex-row sm:rounded-full">
           <input
             type="email"
             placeholder={t("emailPlaceholder")}
