@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+:root {
+  --background: #faf7f5;
+  --foreground: #222222;
+  --brand-mio-beauty-primary: #f5a08a;
+  --brand-mio-beauty-secondary: #f7b29e;
+  --brand-mio-beauty-surface: #ffe7de;
+  --brand-shineskin-primary: #eab7dc;
+  --brand-shineskin-secondary: #f4d7eb;
+  --brand-shineskin-surface: #fff5fb;
+  --brand-mio-baby-primary: #bfd5ec;
+  --brand-mio-baby-secondary: #ddeaf7;
+  --brand-mio-baby-surface: #f5faff;
+  --brand-mio-home-primary: #f4a18d;
+  --brand-mio-home-secondary: #fbe6dc;
+  --brand-mio-home-surface: #fff7f2;
+  --brand-primary: var(--brand-mio-beauty-primary);
+  --brand-secondary: var(--brand-mio-beauty-secondary);
+  --brand-surface: var(--brand-mio-beauty-surface);
+  --brand-ink: #2d2d2d;
+  --brand-muted: #7a6f6b;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: antialiased;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+::selection {
+  background: var(--brand-mio-beauty-surface);
+  color: var(--brand-ink);
+}
