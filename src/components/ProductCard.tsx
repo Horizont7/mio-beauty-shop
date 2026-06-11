@@ -11,6 +11,7 @@ import { CatalogProduct } from "@/lib/products";
 type ProductCardProps = {
   product: CatalogProduct;
   theme?: BrandTheme;
+  compact?: boolean;
 };
 
 function formatPrice(price: number | null, language: "ru" | "uz") {
@@ -54,6 +55,7 @@ function ProductCardImage({ src, alt }: { src: string; alt: string }) {
 export default function ProductCard({
   product,
   theme = getBrandTheme(product.brand),
+  compact = false,
 }: ProductCardProps) {
   const { language, t } = useLanguage();
   const localizedProduct = getLocalizedProduct(product, language);
@@ -63,29 +65,31 @@ export default function ProductCard({
   return (
     <Link
       href={`/product/${product.slug || product.id}`}
-      className="group block overflow-hidden rounded-[24px] border border-white/80 bg-white/90 shadow-[0_24px_80px_rgba(112,72,61,0.12)] backdrop-blur transition duration-500 hover:-translate-y-2 hover:shadow-[0_34px_100px_rgba(112,72,61,0.2)]"
+      className="group block overflow-hidden rounded-[20px] border border-white/80 bg-white/90 shadow-[0_20px_60px_rgba(112,72,61,0.1)] backdrop-blur transition duration-500 hover:-translate-y-1.5 hover:shadow-[0_30px_90px_rgba(112,72,61,0.18)] sm:rounded-[24px]"
     >
       <div
-        className="relative aspect-[1/1.18] overflow-hidden"
+        className={`relative overflow-hidden ${
+          compact ? "aspect-[1/1.05] sm:aspect-[1/1.18]" : "aspect-[1/1.18]"
+        }`}
         style={{
           background: `linear-gradient(145deg, ${theme.surface}, #fffaf7 62%, #f4ddd6)`,
         }}
       >
-        <div className="absolute inset-x-8 bottom-6 h-16 rounded-full bg-black/10 blur-2xl transition duration-700 group-hover:scale-110" />
-        <div className="absolute left-4 top-4 z-10 flex flex-wrap gap-2">
+        <div className="absolute inset-x-6 bottom-5 h-12 rounded-full bg-black/10 blur-2xl transition duration-700 group-hover:scale-110 sm:inset-x-8 sm:bottom-6 sm:h-16" />
+        <div className="absolute left-3 top-3 z-10 flex flex-wrap gap-1.5 sm:left-4 sm:top-4 sm:gap-2">
           <span
-            className="rounded-full border border-white/50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white shadow-sm backdrop-blur"
+            className="rounded-full border border-white/50 px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-white shadow-sm backdrop-blur sm:px-3 sm:text-[10px] sm:tracking-[0.18em]"
             style={{ background: theme.primary }}
           >
             {theme.label}
           </span>
           {product.is_new && (
-            <span className="rounded-full border border-white/70 bg-white/85 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--brand-ink)] backdrop-blur">
+            <span className="rounded-full border border-white/70 bg-white/85 px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--brand-ink)] backdrop-blur sm:px-3 sm:text-[10px] sm:tracking-[0.18em]">
               {t("newBadge")}
             </span>
           )}
           {product.is_hit && (
-            <span className="rounded-full border border-white/20 bg-black/80 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white backdrop-blur">
+            <span className="rounded-full border border-white/20 bg-black/80 px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-white backdrop-blur sm:px-3 sm:text-[10px] sm:tracking-[0.18em]">
               {t("hitBadge")}
             </span>
           )}
@@ -107,28 +111,28 @@ export default function ProductCard({
         )}
       </div>
 
-      <div className="space-y-5 p-5 sm:p-6">
+      <div className="space-y-3 p-3.5 sm:space-y-5 sm:p-6">
         <div>
-          <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#b9958c]">
+          <p className="mb-2 truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-[#b9958c] sm:mb-3 sm:text-[11px] sm:tracking-[0.22em]">
             {product.brand || theme.label}
           </p>
-          <h3 className="line-clamp-2 min-h-14 text-lg font-semibold leading-7 text-[var(--brand-ink)]">
+          <h3 className="line-clamp-2 min-h-10 text-sm font-semibold leading-5 text-[var(--brand-ink)] sm:min-h-14 sm:text-lg sm:leading-7">
             {localizedProduct.name}
           </h3>
         </div>
 
-        <div className="flex items-end justify-between gap-3">
-          <div>
-            <p className="text-lg font-bold text-[var(--brand-ink)]">
+        <div className="flex items-end justify-between gap-2">
+          <div className="min-w-0">
+            <p className="truncate text-sm font-bold text-[var(--brand-ink)] sm:text-lg">
               {price || t("priceOnRequest")}
             </p>
             {oldPrice && product.old_price !== product.price && (
-              <p className="mt-1 text-sm font-semibold text-[#b9958c] line-through">
+              <p className="mt-1 truncate text-xs font-semibold text-[#b9958c] line-through sm:text-sm">
                 {oldPrice}
               </p>
             )}
           </div>
-          <span className="rounded-full bg-[var(--brand-ink)] px-4 py-2 text-sm font-semibold text-white shadow-[0_12px_28px_rgba(33,31,30,0.18)] transition duration-300 group-hover:scale-105 group-hover:bg-[#EEA391]">
+          <span className="shrink-0 rounded-full bg-[var(--brand-ink)] px-3 py-2 text-xs font-semibold text-white shadow-[0_12px_28px_rgba(33,31,30,0.18)] transition duration-300 group-hover:scale-105 group-hover:bg-[#EEA391] sm:px-4 sm:text-sm">
             {t("addToCart")}
           </span>
         </div>

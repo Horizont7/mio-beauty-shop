@@ -12,6 +12,7 @@ import {
   getLocalizedProduct,
 } from "@/lib/localized-data";
 import { CatalogProduct } from "@/lib/products";
+import { supabase } from "@/lib/supabase";
 import { VideoHighlight } from "@/lib/video-highlights";
 import ProductCard from "@/components/ProductCard";
 import VideoHighlightsSection from "@/components/VideoHighlightsSection";
@@ -24,6 +25,11 @@ type HomePageContentProps = {
 };
 
 const productsPerPage = 16;
+
+type HeroStats = {
+  brands: number | null;
+  products: number | null;
+};
 
 function getThemeByCategoryId(categories: NavigationCategory[]) {
   return categories.reduce<Record<number, BrandTheme>>(
@@ -48,6 +54,10 @@ export default function HomePageContent({
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
   const [search, setSearch] = useState("");
   const [sortMode, setSortMode] = useState("featured");
+  const [heroStats, setHeroStats] = useState<HeroStats>({
+    brands: null,
+    products: null,
+  });
   const themeByCategoryId = useMemo(
     () => getThemeByCategoryId(categories),
     [categories]
@@ -55,12 +65,85 @@ export default function HomePageContent({
   const displayBrands = categories.length
     ? categories
     : [
-                { id: -1, name: "MIO BEAUTY", name_ru: null, name_uz: null, slug: "mio-beauty" },
-        { id: -2, name: "SHINESKIN", name_ru: null, name_uz: null, slug: "shineskin" },
-        { id: -3, name: "MIO BABY", name_ru: null, name_uz: null, slug: "mio-baby" },
-        { id: -4, name: "MIO HOME", name_ru: null, name_uz: null, slug: "mio-home" },
+        {
+          id: -1,
+          name: "MIO BEAUTY",
+          name_ru: null,
+          name_uz: null,
+          slug: "mio-beauty",
+          image: null,
+        },
+        {
+          id: -2,
+          name: "SHINESKIN",
+          name_ru: null,
+          name_uz: null,
+          slug: "shineskin",
+          image: null,
+        },
+        {
+          id: -3,
+          name: "MIO BABY",
+          name_ru: null,
+          name_uz: null,
+          slug: "mio-baby",
+          image: null,
+        },
+        {
+          id: -4,
+          name: "MIO HOME",
+          name_ru: null,
+          name_uz: null,
+          slug: "mio-home",
+          image: null,
+        },
       ];
   const { language, t } = useLanguage();
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadHeroStats() {
+      const [categoriesResult, productsResult] = await Promise.all([
+        supabase
+          .from("categories")
+          .select("id", { count: "exact", head: true })
+          .eq("active", true),
+        supabase
+          .from("products")
+          .select("id", { count: "exact", head: true })
+          .eq("active", true),
+      ]);
+
+      if (!active) return;
+
+      setHeroStats({
+        brands: categoriesResult.count ?? categories.length,
+        products: productsResult.count ?? products.length,
+      });
+    }
+
+    loadHeroStats();
+
+    const channel = supabase
+      .channel("homepage-hero-stats")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "categories" },
+        loadHeroStats
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "products" },
+        loadHeroStats
+      )
+      .subscribe();
+
+    return () => {
+      active = false;
+      supabase.removeChannel(channel);
+    };
+  }, [categories.length, products.length]);
 
   useEffect(() => {
     if (banners.length <= 1) return;
@@ -188,58 +271,60 @@ export default function HomePageContent({
     <>
       <section className="relative overflow-hidden bg-[linear-gradient(135deg,#fffaf7_0%,#f7e8e2_48%,#ffffff_100%)]">
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.7),rgba(255,250,247,0)_45%,rgba(238,163,145,0.12))]" />
-        <div className="relative mx-auto grid min-h-[720px] max-w-7xl items-center gap-12 px-6 py-16 lg:grid-cols-[0.92fr_1.08fr] lg:py-20">
+        <MobileQuickCategories
+          categories={displayBrands}
+          onPromotionsClick={openCatalog}
+        />
+        <div className="relative mx-auto grid min-h-[440px] max-w-7xl items-center gap-6 px-4 pb-7 pt-4 sm:px-6 lg:min-h-[720px] lg:grid-cols-[0.92fr_1.08fr] lg:gap-12 lg:py-20">
           <div className="relative z-20 max-w-xl">
-            <p className="mb-6 text-xs font-semibold uppercase tracking-[0.32em] text-[#b97667]">
+            <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#b97667] sm:mb-6 sm:text-xs sm:tracking-[0.32em]">
               {t("platformHeroEyebrow")}
             </p>
-            <h1 className="text-6xl font-semibold leading-[0.88] text-[var(--brand-ink)] sm:text-7xl lg:text-8xl">
+            <h1 className="text-4xl font-semibold leading-[0.9] text-[var(--brand-ink)] sm:text-7xl lg:text-8xl">
               MIO BEAUTY
             </h1>
-            <p className="mt-6 text-3xl font-medium leading-tight text-[#b97667] sm:text-4xl">
+            <p className="mt-3 text-xl font-medium leading-tight text-[#b97667] sm:mt-6 sm:text-4xl">
               Go&apos;zallik bizdan boshlanadi
             </p>
-            <p className="mt-7 max-w-lg text-lg leading-8 text-[var(--brand-muted)]">
+            <p className="mt-3 max-w-lg text-sm leading-6 text-[var(--brand-muted)] sm:mt-7 sm:text-lg sm:leading-8">
               Premium beauty, baby and home care products for everyday
               life.
             </p>
-            <div className="mt-9 flex flex-wrap gap-4">
+            <div className="mt-5 flex flex-wrap gap-3 sm:mt-9 sm:gap-4">
               <button
                 type="button"
                 onClick={openCatalog}
-                className="rounded-full bg-[var(--brand-ink)] px-8 py-4 text-sm font-semibold uppercase tracking-[0.16em] text-white shadow-[0_18px_45px_rgba(33,31,30,0.18)] transition hover:-translate-y-0.5 hover:bg-[#EEA391]"
+                className="rounded-full bg-[var(--brand-ink)] px-5 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-white shadow-[0_18px_45px_rgba(33,31,30,0.18)] transition hover:-translate-y-0.5 hover:bg-[#EEA391] sm:px-8 sm:py-4 sm:text-sm sm:tracking-[0.16em]"
               >
                 Browse Catalog
               </button>
               <Link
                 href="#platform"
-                className="rounded-full border border-[#d7b2a7] bg-white/80 px-8 py-4 text-sm font-semibold uppercase tracking-[0.16em] text-[var(--brand-ink)] shadow-sm transition hover:-translate-y-0.5 hover:border-[#EEA391]"
+                className="rounded-full border border-[#d7b2a7] bg-white/80 px-5 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--brand-ink)] shadow-sm transition hover:-translate-y-0.5 hover:border-[#EEA391] sm:px-8 sm:py-4 sm:text-sm sm:tracking-[0.16em]"
               >
                 Learn More
               </Link>
             </div>
-            <div className="mt-10 grid max-w-lg grid-cols-3 gap-3">
-              {[
-                ["4", t("brands")],
-                ["100+", t("products")],
-                ["B2B", t("b2bReady")],
-              ].map(([value, label]) => (
-                <div
-                  key={label}
-                  className="rounded-[24px] border border-white/70 bg-white/75 p-4 shadow-[0_18px_50px_rgba(180,118,103,0.1)] backdrop-blur"
-                >
-                  <p className="text-2xl font-semibold text-[var(--brand-ink)]">
-                    {value}
-                  </p>
-                  <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--brand-muted)]">
-                    {label}
-                  </p>
-                </div>
-              ))}
+            <div className="mt-5 grid max-w-lg grid-cols-3 gap-2 sm:mt-10 sm:gap-3">
+              <HeroStatCard
+                href="/catalog/categories"
+                value={heroStats.brands}
+                label={t("brands")}
+              />
+              <HeroStatCard
+                href="/catalog/products"
+                value={heroStats.products}
+                label={t("products")}
+              />
+              <HeroStatCard
+                href="/b2b"
+                value="B2B"
+                label={t("b2bReady")}
+              />
             </div>
           </div>
 
-          <div className="relative h-[520px] overflow-hidden rounded-[44px] border border-white/60 bg-white/40 shadow-[0_35px_100px_rgba(112,72,61,0.18)] lg:h-[590px]">
+          <div className="relative h-[250px] overflow-hidden rounded-[26px] border border-white/60 bg-white/40 shadow-[0_24px_70px_rgba(112,72,61,0.16)] sm:h-[420px] sm:rounded-[44px] lg:h-[590px]">
             {currentBanner?.image || currentBanner?.mobile_image ? (
               <HeroBannerSlide
                 key={`${currentBanner.id}-${currentBanner.image}-${currentBanner.mobile_image}`}
@@ -273,8 +358,6 @@ export default function HomePageContent({
       </section>
 
       <VideoHighlightsSection highlights={videoHighlights} />
-      <PlatformOverview />
-      <BrandUniverse categories={displayBrands} />
       <ProductSection
         id="new-arrivals"
         label={t("beautyEdit")}
@@ -283,6 +366,7 @@ export default function HomePageContent({
         products={newProducts.slice(0, 4)}
         getTheme={themeForProduct}
         action={openCatalog}
+        compact
       />
       <ProductSection
         label={t("featuredPriority")}
@@ -291,10 +375,118 @@ export default function HomePageContent({
         products={hitProducts.slice(0, 4)}
         getTheme={themeForProduct}
         action={openCatalog}
+        compact
       />
+      <PlatformOverview />
+      <BrandUniverse categories={displayBrands} />
       <BrandStory />
       <Newsletter />
+      <div className="h-24 md:hidden" />
+      <MobileBottomNavigation />
     </>
+  );
+}
+
+function HeroStatCard({
+  href,
+  value,
+  label,
+  suffix = "",
+}: {
+  href: string;
+  value: number | string | null;
+  label: string;
+  suffix?: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="cursor-pointer rounded-[18px] border border-white/70 bg-white/75 p-3 shadow-[0_18px_50px_rgba(180,118,103,0.1)] backdrop-blur transition duration-300 hover:-translate-y-1 hover:border-[#EEA391] hover:bg-white sm:rounded-[24px] sm:p-4"
+    >
+      {value === null ? (
+        <div className="h-7 w-14 animate-pulse rounded-full bg-[#f3d5cc] sm:h-8" />
+      ) : (
+        <p className="text-xl font-semibold text-[var(--brand-ink)] sm:text-2xl">
+          {value}
+          {suffix}
+        </p>
+      )}
+      <p className="mt-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--brand-muted)] sm:text-[11px] sm:tracking-[0.18em]">
+        {label}
+      </p>
+    </Link>
+  );
+}
+
+function MobileQuickCategories({
+  categories,
+  onPromotionsClick,
+}: {
+  categories: NavigationCategory[];
+  onPromotionsClick: () => void;
+}) {
+  const { language, t } = useLanguage();
+  const preferred = ["mio-beauty", "shineskin", "mio-baby", "mio-home"];
+  const shortcuts = preferred
+    .map((slug) => categories.find((category) => category.slug === slug))
+    .filter((category): category is NavigationCategory => Boolean(category));
+
+  return (
+    <div className="relative z-20 mx-auto max-w-7xl px-4 pt-4 lg:hidden">
+      <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2">
+        {shortcuts.map((category) => (
+          <Link
+            key={category.id}
+            href={`/category/${category.slug}`}
+            className="flex min-w-[124px] snap-start items-center gap-3 rounded-2xl border border-white/80 bg-white/85 p-3 shadow-[0_14px_35px_rgba(180,118,103,0.1)]"
+          >
+            <CategoryThumb category={category} />
+            <span className="text-xs font-bold leading-4 text-[var(--brand-ink)]">
+              {getLocalizedCategory(category, language)}
+            </span>
+          </Link>
+        ))}
+        <button
+          type="button"
+          onClick={onPromotionsClick}
+          className="flex min-w-[124px] snap-start items-center gap-3 rounded-2xl border border-white/80 bg-white/85 p-3 text-left shadow-[0_14px_35px_rgba(180,118,103,0.1)]"
+        >
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#ffe7de] text-sm font-black text-[#b97667]">
+            %
+          </span>
+          <span className="text-xs font-bold leading-4 text-[var(--brand-ink)]">
+            {t("promotions")}
+          </span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function CategoryThumb({ category }: { category: NavigationCategory }) {
+  const theme = getBrandTheme(`${category.name} ${category.slug}`);
+
+  if (category.image) {
+    return (
+      <span className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl bg-white">
+        <Image
+          src={category.image}
+          alt={category.name}
+          fill
+          sizes="44px"
+          className="object-cover"
+        />
+      </span>
+    );
+  }
+
+  return (
+    <span
+      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-xs font-black tracking-[0.16em]"
+      style={{ background: theme.surface, color: theme.primary }}
+    >
+      MIO
+    </span>
   );
 }
 
@@ -477,6 +669,7 @@ function ProductSection({
   products,
   getTheme,
   action,
+  compact = false,
 }: {
   id?: string;
   label: string;
@@ -485,44 +678,46 @@ function ProductSection({
   products: CatalogProduct[];
   getTheme: (product: CatalogProduct) => BrandTheme;
   action: () => void;
+  compact?: boolean;
 }) {
   const { t } = useLanguage();
 
   return (
     <section
       id={id}
-      className="relative overflow-hidden bg-[linear-gradient(135deg,#fffaf7_0%,#f8ebe5_45%,#fff_100%)] py-24"
+      className="relative overflow-hidden bg-[linear-gradient(135deg,#fffaf7_0%,#f8ebe5_45%,#fff_100%)] py-10 sm:py-24"
     >
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.7),rgba(255,250,247,0)_42%,rgba(238,163,145,0.12))]" />
-      <div className="mx-auto max-w-7xl px-6">
-        <div className="relative mb-14 flex flex-col gap-8 sm:flex-row sm:items-end sm:justify-between">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        <div className="relative mb-6 flex flex-col gap-4 sm:mb-14 sm:flex-row sm:items-end sm:justify-between sm:gap-8">
           <div className="max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[#b97667]">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#b97667] sm:text-xs sm:tracking-[0.32em]">
               {label}
             </p>
-            <h2 className="mt-4 text-5xl font-semibold leading-tight text-[var(--brand-ink)] sm:text-6xl">
+            <h2 className="mt-2 text-3xl font-semibold leading-tight text-[var(--brand-ink)] sm:mt-4 sm:text-6xl">
               {title}
             </h2>
-            <p className="mt-5 max-w-2xl text-base leading-8 text-[var(--brand-muted)] sm:text-lg">
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--brand-muted)] sm:mt-5 sm:text-lg sm:leading-8">
               {subtitle}
             </p>
           </div>
           <button
             type="button"
             onClick={action}
-            className="w-fit rounded-full border border-[#d7b2a7] bg-white/80 px-7 py-3 text-sm font-semibold uppercase tracking-[0.16em] text-[var(--brand-ink)] shadow-[0_16px_45px_rgba(180,118,103,0.16)] backdrop-blur transition duration-300 hover:-translate-y-0.5 hover:border-[#EEA391] hover:bg-[#EEA391] hover:text-white"
+            className="w-fit rounded-full border border-[#d7b2a7] bg-white/80 px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--brand-ink)] shadow-[0_16px_45px_rgba(180,118,103,0.16)] backdrop-blur transition duration-300 hover:-translate-y-0.5 hover:border-[#EEA391] hover:bg-[#EEA391] hover:text-white sm:px-7 sm:py-3 sm:text-sm sm:tracking-[0.16em]"
           >
             {t("viewAll")}
           </button>
         </div>
 
         {products.length > 0 ? (
-          <div className="relative grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="relative grid grid-cols-2 gap-3 sm:gap-8 lg:grid-cols-4">
             {products.map((product) => (
               <ProductCard
                 key={product.id}
                 product={product}
                 theme={getTheme(product)}
+                compact={compact}
               />
             ))}
           </div>
@@ -533,6 +728,39 @@ function ProductSection({
         )}
       </div>
     </section>
+  );
+}
+
+function MobileBottomNavigation() {
+  const { t } = useLanguage();
+  const items = [
+    { href: "/", label: t("home"), icon: "H" },
+    { href: "/catalog/categories", label: t("catalog"), icon: "C" },
+    { href: "/catalog/products", label: t("search"), icon: "S" },
+    { href: "/cart", label: t("cart"), icon: "B" },
+    { href: "/profile", label: t("profile"), icon: "P" },
+  ];
+
+  return (
+    <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-[#f3cfc4] bg-white/95 px-2 pb-[calc(env(safe-area-inset-bottom)+0.45rem)] pt-2 shadow-[0_-18px_45px_rgba(180,118,103,0.14)] backdrop-blur md:hidden">
+      <div className="mx-auto grid max-w-md grid-cols-5 gap-1">
+        {items.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className="relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-[10px] font-semibold text-[var(--brand-muted)] transition hover:bg-[#fff0eb] hover:text-[#b97667]"
+          >
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#ffe7de] text-[11px] font-black text-[#b97667]">
+              {item.icon}
+            </span>
+            <span>{item.label}</span>
+            {item.href === "/cart" && (
+              <span className="absolute right-4 top-1 hidden h-4 min-w-4 rounded-full bg-[#EEA391] px-1 text-[9px] leading-4 text-white" />
+            )}
+          </Link>
+        ))}
+      </div>
+    </nav>
   );
 }
 

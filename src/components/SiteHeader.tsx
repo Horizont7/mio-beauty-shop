@@ -18,8 +18,8 @@ export default function SiteHeader({
   return (
     <header className="sticky top-0 z-50 border-b border-black/5 bg-white/85 backdrop-blur-xl">
       <div className="border-b border-black/5 bg-[var(--brand-mio-beauty-surface)]/70">
-        <div className="mx-auto flex h-10 max-w-7xl items-center justify-between px-5 text-xs font-medium uppercase tracking-[0.18em] text-[var(--brand-muted)]">
-          <span>{t("platformHeroEyebrow")}</span>
+        <div className="mx-auto flex h-9 max-w-7xl items-center justify-end px-4 text-xs font-medium uppercase tracking-[0.18em] text-[var(--brand-muted)] sm:justify-between sm:px-5">
+          <span className="hidden sm:inline">{t("platformHeroEyebrow")}</span>
           <div className="flex items-center gap-4">
             <span className="hidden sm:block">+998 (88) 033-85-26</span>
             <div className="flex items-center gap-1 rounded-full border border-black/10 bg-white/70 p-1">
@@ -42,20 +42,20 @@ export default function SiteHeader({
         </div>
       </div>
 
-      <div className="mx-auto grid max-w-7xl grid-cols-[auto_1fr_auto] items-center gap-5 px-5 py-5">
+      <div className="mx-auto grid max-w-7xl grid-cols-[auto_1fr_auto] items-center gap-3 px-4 py-3 sm:gap-5 sm:px-5 sm:py-5">
         <button
           type="button"
           onClick={() => setMenuOpen((current) => !current)}
-          className="rounded-full border border-black/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--brand-ink)] lg:hidden"
+          className="rounded-full border border-black/10 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--brand-ink)] sm:px-4 sm:text-xs sm:tracking-[0.18em] lg:hidden"
         >
           {t("menu")}
         </button>
 
         <Link href="/" className="justify-self-start">
-          <div className="text-4xl font-extrabold tracking-[0.28em] text-[var(--brand-mio-beauty-primary)]">
+          <div className="text-3xl font-extrabold tracking-[0.24em] text-[var(--brand-mio-beauty-primary)] sm:text-4xl sm:tracking-[0.28em]">
             MIO
           </div>
-          <div className="text-center text-[10px] font-semibold uppercase tracking-[0.52em] text-[var(--brand-mio-beauty-primary)]">
+          <div className="text-center text-[9px] font-semibold uppercase tracking-[0.44em] text-[var(--brand-mio-beauty-primary)] sm:text-[10px] sm:tracking-[0.52em]">
             Beauty
           </div>
         </Link>
@@ -99,11 +99,20 @@ export default function SiteHeader({
           />
           <Link
             href="/#new-arrivals"
-            className="rounded-full border border-black/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em]"
+            className="hidden rounded-full border border-black/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] sm:inline-flex"
           >
             {t("shop")}
           </Link>
         </div>
+      </div>
+
+      <div className="px-4 pb-3 md:hidden">
+        <Link
+          href="/catalog/products"
+          className="flex h-11 items-center rounded-full border border-[#f0c7bc] bg-white px-4 text-sm font-medium text-[var(--brand-muted)] shadow-[0_10px_26px_rgba(180,118,103,0.12)]"
+        >
+          {t("mobileSearchPlaceholder")}
+        </Link>
       </div>
 
       {menuOpen && (

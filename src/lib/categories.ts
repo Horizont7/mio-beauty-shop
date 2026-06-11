@@ -6,6 +6,7 @@ export type NavigationCategory = {
   name_ru: string | null;
   name_uz: string | null;
   slug: string;
+  image: string | null;
 };
 
 export type Category = {
@@ -22,7 +23,7 @@ export type Category = {
 export async function getActiveNavigationCategories() {
   const { data, error } = await supabase
     .from("categories")
-    .select("id,name,name_ru,name_uz,slug")
+    .select("id,name,name_ru,name_uz,slug,image")
     .eq("active", true)
     .order("sort_order", { ascending: true, nullsFirst: false });
 

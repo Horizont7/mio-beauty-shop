@@ -37,6 +37,7 @@ export const translations = {
     brandUniverseTitle:
       "Четыре направления MIO Beauty для ухода, семьи и дома.",
     catalog: "Каталог",
+    cart: "Корзина",
     category: "Категория",
     categoryNotFound: "Категория не найдена",
     categoryNotFoundMessage:
@@ -70,6 +71,7 @@ export const translations = {
     luxuryCatalog: "Каталог MIO Beauty",
     marketplacePartnerships: "Партнерство с маркетплейсами",
     menu: "Меню",
+    mobileSearchPlaceholder: "Поиск товаров MIO Beauty",
     mioCompanyPlatform: "MIO Beauty",
     newArrivals: "Новинки",
     newArrivalsTitle: "Новые продукты для красивых ежедневных ритуалов",
@@ -99,6 +101,8 @@ export const translations = {
     platformPillar3Title: "Партнерское направление",
     playVideo: "Смотреть",
     previous: "Назад",
+    profile: "Профиль",
+    promotions: "Акции",
     priceHigh: "Цена: сначала выше",
     priceLow: "Цена: сначала ниже",
     priceOnRequest: "Цена по запросу",
@@ -116,6 +120,7 @@ export const translations = {
     productUsageEmpty:
       "Рекомендации по применению скоро будут добавлены.",
     relatedProducts: "Похожие продукты",
+    search: "Поиск",
     searchBeauty: "Поиск по сайту",
     searchProducts: "Найти продукт или бренд",
     service: "Сервис",
@@ -193,6 +198,7 @@ export const translations = {
     brandUniverseTitle:
       "MIO Beauty'dan parvarish, oila va uy uchun to'rtta yo'nalish.",
     catalog: "Katalog",
+    cart: "Savat",
     category: "Kategoriya",
     categoryNotFound: "Kategoriya topilmadi",
     categoryNotFoundMessage:
@@ -226,6 +232,7 @@ export const translations = {
     luxuryCatalog: "MIO Beauty katalogi",
     marketplacePartnerships: "Marketplace hamkorliklari",
     menu: "Menyu",
+    mobileSearchPlaceholder: "MIO Beauty mahsulotlarini qidirish",
     mioCompanyPlatform: "MIO Beauty",
     newArrivals: "Yangi mahsulotlar",
     newArrivalsTitle: "Chiroyli kundalik ritual uchun yangi mahsulotlar",
@@ -255,6 +262,8 @@ export const translations = {
     platformPillar3Title: "Hamkorlik yo'nalishi",
     playVideo: "Ko'rish",
     previous: "Oldingi",
+    profile: "Profil",
+    promotions: "Aksiyalar",
     priceHigh: "Narx: avval yuqori",
     priceLow: "Narx: avval past",
     priceOnRequest: "Narx so'rov asosida",
@@ -272,6 +281,7 @@ export const translations = {
     productUsageEmpty:
       "Qo'llash bo'yicha tavsiyalar tez orada qo'shiladi.",
     relatedProducts: "O'xshash mahsulotlar",
+    search: "Qidiruv",
     searchBeauty: "Saytdan qidirish",
     searchProducts: "Mahsulot yoki brendni qidirish",
     service: "Servis",
