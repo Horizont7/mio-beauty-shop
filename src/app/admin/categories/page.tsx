@@ -530,6 +530,7 @@ export default function CategoriesPage() {
                       >
                         <td className="p-4">
                           <div className="w-14 h-14 overflow-hidden rounded-lg border bg-white">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={category.image || ""}
                               alt={category.name}

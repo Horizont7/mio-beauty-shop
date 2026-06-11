@@ -605,6 +605,7 @@ export default function BannersPage() {
               >
                 <div className="h-48 bg-[#EEA391]/10">
                   {banner.image ? (
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={banner.image}
                       alt={banner.title}
@@ -703,6 +704,7 @@ function ImageInput({
       </span>
       <div className="mb-2 flex aspect-[4/3] items-center justify-center overflow-hidden rounded-xl border border-dashed border-[#EEA391]/60 bg-[#EEA391]/10">
         {preview ? (
+          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={preview}
             alt={label}

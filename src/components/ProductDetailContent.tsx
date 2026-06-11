@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useMemo, useState } from "react";
 import LuxuryFooter from "@/components/LuxuryFooter";
 import ProductCard from "@/components/ProductCard";
@@ -58,6 +59,10 @@ export default function ProductDetailContent({
 }: ProductDetailContentProps) {
   const { language, t } = useLanguage();
   const [selectedImage, setSelectedImage] = useState(images[0] || "");
+  const [selectedImageLoaded, setSelectedImageLoaded] = useState(false);
+  const [loadedThumbnails, setLoadedThumbnails] = useState<
+    Record<string, boolean>
+  >({});
   const [activeTab, setActiveTab] = useState<ProductTab>("description");
 
   const category = product
@@ -141,16 +146,31 @@ export default function ProductDetailContent({
       <section className="mx-auto grid max-w-7xl gap-10 px-6 py-10 lg:grid-cols-[1.05fr_0.95fr] lg:py-16">
         <div>
           <div
-            className="flex aspect-square items-center justify-center overflow-hidden rounded-[34px] border border-[#f1d4cc] shadow-[0_24px_90px_rgba(238,163,145,0.16)]"
+            className="relative flex aspect-square items-center justify-center overflow-hidden rounded-[34px] border border-[#f1d4cc] shadow-[0_24px_90px_rgba(238,163,145,0.16)]"
             style={{ background: theme.surface }}
           >
             {selectedImage ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={selectedImage}
-                alt={localizedProduct.name}
-                className="h-full w-full object-contain p-8 md:p-14"
-              />
+              <>
+                <div
+                  className={`absolute inset-0 bg-[linear-gradient(100deg,rgba(255,255,255,0.06),rgba(255,255,255,0.5),rgba(255,255,255,0.06))] transition-opacity duration-500 ${
+                    selectedImageLoaded ? "opacity-0" : "animate-pulse opacity-100"
+                  }`}
+                />
+                <div className="absolute inset-8 md:inset-14">
+                  <Image
+                    src={selectedImage}
+                    alt={localizedProduct.name}
+                    fill
+                    sizes="(min-width: 1024px) 50vw, 100vw"
+                    className={`object-contain transition-opacity duration-500 ${
+                      selectedImageLoaded ? "opacity-100" : "opacity-0"
+                    }`}
+                    loading="lazy"
+                    quality={80}
+                    onLoad={() => setSelectedImageLoaded(true)}
+                  />
+                </div>
+              </>
             ) : (
               <div
                 className="text-5xl font-extrabold tracking-[0.35em]"
@@ -167,18 +187,39 @@ export default function ProductDetailContent({
                 <button
                   key={image}
                   type="button"
-                  onClick={() => setSelectedImage(image)}
-                  className={`aspect-square overflow-hidden rounded-2xl border bg-white transition hover:border-[#EEA391] ${
+                  onClick={() => {
+                    if (image === selectedImage) return;
+
+                    setSelectedImage(image);
+                    setSelectedImageLoaded(Boolean(loadedThumbnails[image]));
+                  }}
+                  className={`relative aspect-square overflow-hidden rounded-2xl border bg-white transition hover:border-[#EEA391] ${
                     selectedImage === image
                       ? "border-[#EEA391]"
                       : "border-black/10"
                   }`}
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  <div
+                    className={`absolute inset-0 bg-gray-100 transition-opacity duration-300 ${
+                      loadedThumbnails[image] ? "opacity-0" : "animate-pulse opacity-100"
+                    }`}
+                  />
+                  <Image
                     src={image}
                     alt={localizedProduct.name}
-                    className="h-full w-full object-contain p-2"
+                    fill
+                    sizes="96px"
+                    className={`object-contain p-2 transition-opacity duration-300 ${
+                      loadedThumbnails[image] ? "opacity-100" : "opacity-0"
+                    }`}
+                    loading="lazy"
+                    quality={60}
+                    onLoad={() =>
+                      setLoadedThumbnails((current) => ({
+                        ...current,
+                        [image]: true,
+                      }))
+                    }
                   />
                 </button>
               ))}

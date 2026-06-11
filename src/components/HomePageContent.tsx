@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { CSSProperties, useEffect, useMemo, useState } from "react";
 import { Banner } from "@/lib/banners";
@@ -240,19 +241,11 @@ export default function HomePageContent({
 
           <div className="relative h-[520px] overflow-hidden rounded-[44px] shadow-[0_35px_100px_rgba(45,45,45,0.16)]">
             {currentBanner?.image ? (
-              <picture>
-                {currentBanner.mobile_image && (
-                  <source
-                    media="(max-width: 767px)"
-                    srcSet={currentBanner.mobile_image}
-                  />
-                )}
-                <img
-                  src={currentBanner.image}
-                  alt={localizedBanner?.title || currentBanner.title}
-                  className="h-full w-full object-cover transition duration-700"
-                />
-              </picture>
+              <HeroBannerImage
+                key={currentBanner.image}
+                src={currentBanner.image}
+                alt={localizedBanner?.title || currentBanner.title}
+              />
             ) : (
               <div className="h-full w-full bg-[var(--brand-mio-beauty-surface)]" />
             )}
@@ -306,6 +299,38 @@ export default function HomePageContent({
       <BrandStory />
       <Reviews />
       <Newsletter />
+    </>
+  );
+}
+
+function HeroBannerImage({
+  src,
+  alt,
+}: {
+  src: string;
+  alt: string;
+}) {
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  return (
+    <>
+      <div
+        className={`absolute inset-0 bg-[linear-gradient(100deg,rgba(255,255,255,0.05),rgba(255,255,255,0.34),rgba(255,255,255,0.05))] transition-opacity duration-500 ${
+          imageLoaded ? "opacity-0" : "animate-pulse opacity-100"
+        }`}
+      />
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        sizes="(min-width: 1024px) 52vw, 100vw"
+        className={`object-cover transition duration-700 ${
+          imageLoaded ? "opacity-100" : "opacity-0"
+        }`}
+        priority
+        quality={82}
+        onLoad={() => setImageLoaded(true)}
+      />
     </>
   );
 }

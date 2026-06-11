@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 import ExcelJS from "exceljs";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
 type Category = {
@@ -1185,6 +1186,12 @@ export default function ProductsPage() {
             >
               + Add product
             </button>
+            <Link
+              href="/admin/products/import-images"
+              className="rounded-full border border-[#EEA391]/40 bg-white px-5 py-3 text-sm font-bold text-[#B96C5C] transition hover:border-[#EEA391] hover:bg-[#EEA391]/10"
+            >
+              Import images
+            </Link>
             <button
               type="button"
               onClick={() => void exportProducts()}

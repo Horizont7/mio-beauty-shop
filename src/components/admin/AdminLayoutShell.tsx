@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 const navItems = [
   { href: "/admin", label: "Dashboard" },
   { href: "/admin/products", label: "Products" },
+  { href: "/admin/products/import-images", label: "Import Images" },
   { href: "/admin/categories", label: "Categories" },
   { href: "/admin/banners", label: "Banners" },
   { href: "/admin/orders", label: "Orders" },
@@ -42,7 +43,7 @@ export default function AdminLayoutShell({
             const active =
               item.href === "/admin"
                 ? pathname === item.href
-                : pathname.startsWith(item.href);
+                : pathname === item.href;
 
             return (
               <Link

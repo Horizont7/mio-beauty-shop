@@ -1,6 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 import { BrandTheme, getBrandTheme } from "@/lib/brand";
 import { useLanguage } from "@/lib/language";
 import { getLocalizedProduct } from "@/lib/localized-data";
@@ -18,6 +20,40 @@ function formatPrice(price: number | null, language: "ru" | "uz") {
     new Intl.NumberFormat(language === "ru" ? "ru-RU" : "uz-UZ").format(
       price
     ) + (language === "ru" ? " сум" : " so'm")
+  );
+}
+
+function ProductCardImage({
+  src,
+  alt,
+}: {
+  src: string;
+  alt: string;
+}) {
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  return (
+    <>
+      <div
+        className={`absolute inset-0 bg-[linear-gradient(100deg,rgba(255,255,255,0.05),rgba(255,255,255,0.42),rgba(255,255,255,0.05))] transition-opacity duration-500 ${
+          imageLoaded ? "opacity-0" : "animate-pulse opacity-100"
+        }`}
+      />
+      <div className="absolute inset-8">
+        <Image
+          src={src}
+          alt={alt}
+          fill
+          sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+          className={`object-contain transition duration-700 group-hover:scale-105 ${
+            imageLoaded ? "opacity-100" : "opacity-0"
+          }`}
+          loading="lazy"
+          quality={75}
+          onLoad={() => setImageLoaded(true)}
+        />
+      </div>
+    </>
   );
 }
 
@@ -58,11 +94,10 @@ export default function ProductCard({
         </div>
 
         {product.image ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <ProductCardImage
+            key={product.image}
             src={product.image}
             alt={localizedProduct.name}
-            className="h-full w-full object-contain p-8 transition duration-700 group-hover:scale-105"
           />
         ) : (
           <div
