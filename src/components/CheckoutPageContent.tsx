@@ -4,7 +4,7 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCommerce } from "@/lib/commerce";
 import { useLanguage } from "@/lib/language";
-import { TranslationKey } from "@/lib/translations";
+import { Language, TranslationKey } from "@/lib/translations";
 
 type CheckoutForm = {
   customerName: string;
@@ -29,9 +29,52 @@ const checkoutFields: Array<[keyof CheckoutForm, TranslationKey, boolean]> = [
   ["address", "address", true],
 ];
 
+const checkoutErrorMessages: Record<
+  string,
+  Record<Language, string>
+> = {
+  database_error: {
+    ru: "Не удалось сохранить заказ. Мы уже проверяем проблему, попробуйте еще раз.",
+    uz: "Buyurtmani saqlab bo'lmadi. Muammoni tekshiryapmiz, qayta urinib ko'ring.",
+  },
+  empty_cart: {
+    ru: "Корзина пуста. Добавьте товар перед оформлением.",
+    uz: "Savat bo'sh. Rasmiylashtirishdan oldin mahsulot qo'shing.",
+  },
+  invalid_order_data: {
+    ru: "Проверьте данные заказа и заполните обязательные поля.",
+    uz: "Buyurtma ma'lumotlarini tekshiring va majburiy maydonlarni to'ldiring.",
+  },
+  product_not_found: {
+    ru: "Один из товаров больше недоступен. Обновите корзину.",
+    uz: "Mahsulotlardan biri hozir mavjud emas. Savatni yangilang.",
+  },
+  product_out_of_stock: {
+    ru: "Один из товаров закончился или его недостаточно на складе.",
+    uz: "Mahsulotlardan biri tugagan yoki omborda yetarli emas.",
+  },
+  server_config_error: {
+    ru: "Оформление временно недоступно. Мы проверяем настройки сервера.",
+    uz: "Rasmiylashtirish vaqtincha mavjud emas. Server sozlamalarini tekshiryapmiz.",
+  },
+};
+
+function getCheckoutErrorMessage(
+  code: string | undefined,
+  fallback: string | undefined,
+  language: Language,
+  defaultMessage: string
+) {
+  if (code && checkoutErrorMessages[code]) {
+    return checkoutErrorMessages[code][language];
+  }
+
+  return fallback || defaultMessage;
+}
+
 export default function CheckoutPageContent() {
   const router = useRouter();
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   const { cartItems, clearCart } = useCommerce();
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(false);
@@ -73,10 +116,18 @@ export default function CheckoutPageContent() {
     const result = (await response.json()) as {
       orderNumber?: string;
       error?: string;
+      errorCode?: string;
     };
 
     if (!response.ok || !result.orderNumber) {
-      setError(result.error || t("checkoutFailed"));
+      setError(
+        getCheckoutErrorMessage(
+          result.errorCode,
+          result.error,
+          language,
+          t("checkoutFailed")
+        )
+      );
       setLoading(false);
       return;
     }
