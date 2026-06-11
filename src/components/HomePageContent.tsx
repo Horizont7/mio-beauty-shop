@@ -2,13 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { CSSProperties, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Banner } from "@/lib/banners";
 import { BrandTheme, getBrandTheme } from "@/lib/brand";
 import { NavigationCategory } from "@/lib/categories";
 import { useLanguage } from "@/lib/language";
 import {
-  getLocalizedBanner,
   getLocalizedCategory,
   getLocalizedProduct,
 } from "@/lib/localized-data";
@@ -76,14 +75,6 @@ export default function HomePageContent({
   }, [banners.length]);
 
   const currentBanner = banners[currentBannerIndex] || null;
-  const localizedBanner = getLocalizedBanner(currentBanner, language);
-  const heroTheme = getBrandTheme(
-    `${localizedBanner?.title || ""} ${currentBanner?.link || ""}`
-  );
-  const heroStyle = {
-    "--hero-primary": heroTheme.primary,
-    "--hero-surface": heroTheme.surface,
-  } as CSSProperties;
 
   const newProducts = useMemo(
     () => products.filter((product) => product.is_new),
@@ -195,46 +186,47 @@ export default function HomePageContent({
 
   return (
     <>
-      <section
-        className="relative overflow-hidden bg-[#fbf7f4]"
-        style={heroStyle}
-      >
-        <div className="mx-auto grid min-h-[680px] max-w-7xl items-center gap-10 px-6 py-12 lg:grid-cols-[1fr_1.05fr]">
+      <section className="relative overflow-hidden bg-[linear-gradient(135deg,#fffaf7_0%,#f7e8e2_48%,#ffffff_100%)]">
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.7),rgba(255,250,247,0)_45%,rgba(238,163,145,0.12))]" />
+        <div className="relative mx-auto grid min-h-[720px] max-w-7xl items-center gap-12 px-6 py-16 lg:grid-cols-[0.92fr_1.08fr] lg:py-20">
           <div className="relative z-20 max-w-xl">
-            <p className="mb-6 text-xs font-semibold uppercase tracking-[0.32em] text-[var(--hero-primary)]">
+            <p className="mb-6 text-xs font-semibold uppercase tracking-[0.32em] text-[#b97667]">
               {t("platformHeroEyebrow")}
             </p>
-            <h1 className="text-5xl font-semibold leading-[0.95] text-[var(--brand-ink)] sm:text-7xl">
-              {localizedBanner?.title || "MIO Beauty"}
+            <h1 className="text-6xl font-semibold leading-[0.88] text-[var(--brand-ink)] sm:text-7xl lg:text-8xl">
+              MIO BEAUTY
             </h1>
+            <p className="mt-6 text-3xl font-medium leading-tight text-[#b97667] sm:text-4xl">
+              Go&apos;zallik bizdan boshlanadi
+            </p>
             <p className="mt-7 max-w-lg text-lg leading-8 text-[var(--brand-muted)]">
-              {localizedBanner?.subtitle || t("platformHeroFallback")}
+              Premium beauty, baby and home care products for everyday
+              life.
             </p>
             <div className="mt-9 flex flex-wrap gap-4">
-              <Link
-                href={currentBanner?.link || "#new-arrivals"}
-                className="rounded-full px-8 py-4 text-sm font-semibold uppercase tracking-[0.16em] text-white shadow-lg transition hover:-translate-y-0.5"
-                style={{ background: "var(--hero-primary)" }}
-              >
-                {localizedBanner?.buttonText || t("discover")}
-              </Link>
               <button
                 type="button"
                 onClick={openCatalog}
-                className="rounded-full border border-black/10 bg-white px-8 py-4 text-sm font-semibold uppercase tracking-[0.16em] text-[var(--brand-ink)] transition hover:border-[var(--hero-primary)]"
+                className="rounded-full bg-[var(--brand-ink)] px-8 py-4 text-sm font-semibold uppercase tracking-[0.16em] text-white shadow-[0_18px_45px_rgba(33,31,30,0.18)] transition hover:-translate-y-0.5 hover:bg-[#EEA391]"
               >
-                {t("shopCatalog")}
+                Browse Catalog
               </button>
+              <Link
+                href="#platform"
+                className="rounded-full border border-[#d7b2a7] bg-white/80 px-8 py-4 text-sm font-semibold uppercase tracking-[0.16em] text-[var(--brand-ink)] shadow-sm transition hover:-translate-y-0.5 hover:border-[#EEA391]"
+              >
+                Learn More
+              </Link>
             </div>
             <div className="mt-10 grid max-w-lg grid-cols-3 gap-3">
               {[
                 ["4", t("brands")],
-                [String(products.length), t("products")],
+                ["100+", t("products")],
                 ["B2B", t("b2bReady")],
               ].map(([value, label]) => (
                 <div
                   key={label}
-                  className="rounded-3xl border border-black/5 bg-white/70 p-4 shadow-sm backdrop-blur"
+                  className="rounded-[24px] border border-white/70 bg-white/75 p-4 shadow-[0_18px_50px_rgba(180,118,103,0.1)] backdrop-blur"
                 >
                   <p className="text-2xl font-semibold text-[var(--brand-ink)]">
                     {value}
@@ -247,17 +239,18 @@ export default function HomePageContent({
             </div>
           </div>
 
-          <div className="relative h-[520px] overflow-hidden rounded-[44px] shadow-[0_35px_100px_rgba(45,45,45,0.16)]">
-            {currentBanner?.image ? (
-              <HeroBannerImage
-                key={currentBanner.image}
-                src={currentBanner.image}
-                alt={localizedBanner?.title || currentBanner.title}
+          <div className="relative h-[520px] overflow-hidden rounded-[44px] border border-white/60 bg-white/40 shadow-[0_35px_100px_rgba(112,72,61,0.18)] lg:h-[590px]">
+            {currentBanner?.image || currentBanner?.mobile_image ? (
+              <HeroBannerSlide
+                key={`${currentBanner.id}-${currentBanner.image}-${currentBanner.mobile_image}`}
+                banner={currentBanner}
               />
             ) : (
-              <div className="h-full w-full bg-[var(--brand-mio-beauty-surface)]" />
+              <div className="flex h-full w-full items-center justify-center bg-[linear-gradient(135deg,#f8e4de,#fffaf7)] text-3xl font-semibold tracking-[0.32em] text-[#b97667]">
+                MIO
+              </div>
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-white/10" />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-white/10" />
           </div>
         </div>
 
@@ -305,35 +298,54 @@ export default function HomePageContent({
   );
 }
 
-function HeroBannerImage({
-  src,
-  alt,
-}: {
-  src: string;
-  alt: string;
-}) {
+function HeroBannerSlide({ banner }: { banner: Banner }) {
   const [imageLoaded, setImageLoaded] = useState(false);
-
-  return (
+  const desktopImage = banner.image || banner.mobile_image;
+  const mobileImage = banner.mobile_image || banner.image;
+  const imageContent = (
     <>
       <div
         className={`absolute inset-0 bg-[linear-gradient(100deg,rgba(255,255,255,0.05),rgba(255,255,255,0.34),rgba(255,255,255,0.05))] transition-opacity duration-500 ${
           imageLoaded ? "opacity-0" : "animate-pulse opacity-100"
         }`}
       />
-      <Image
-        src={src}
-        alt={alt}
-        fill
-        sizes="(min-width: 1024px) 52vw, 100vw"
-        className={`object-cover transition duration-700 ${
-          imageLoaded ? "opacity-100" : "opacity-0"
-        }`}
-        priority
-        quality={82}
-        onLoad={() => setImageLoaded(true)}
-      />
+      {mobileImage && (
+        <Image
+          src={mobileImage}
+          alt="MIO Beauty banner"
+          fill
+          sizes="100vw"
+          className={`object-cover transition duration-700 md:hidden ${
+            imageLoaded ? "opacity-100" : "opacity-0"
+          }`}
+          priority
+          quality={82}
+          onLoad={() => setImageLoaded(true)}
+        />
+      )}
+      {desktopImage && (
+        <Image
+          src={desktopImage}
+          alt="MIO Beauty banner"
+          fill
+          sizes="(min-width: 1024px) 52vw, 100vw"
+          className={`hidden object-cover transition duration-700 md:block ${
+            imageLoaded ? "opacity-100" : "opacity-0"
+          }`}
+          priority
+          quality={82}
+          onLoad={() => setImageLoaded(true)}
+        />
+      )}
     </>
+  );
+
+  if (!banner.link) return imageContent;
+
+  return (
+    <Link href={banner.link} className="absolute inset-0 block">
+      {imageContent}
+    </Link>
   );
 }
 

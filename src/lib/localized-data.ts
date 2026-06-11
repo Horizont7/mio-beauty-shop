@@ -1,4 +1,3 @@
-import { Banner } from "@/lib/banners";
 import { NavigationCategory } from "@/lib/categories";
 import { Language } from "@/lib/translations";
 import { VideoHighlight } from "@/lib/video-highlights";
@@ -34,29 +33,6 @@ export function getLocalizedProduct(
     seoTitle: product.seo_title_ru || product.seo_title_uz || null,
     seoDescription:
       product.seo_description_ru || product.seo_description_uz || null,
-  };
-}
-
-export function getLocalizedBanner(
-  banner: Banner | null,
-  language: Language
-) {
-  if (!banner) return null;
-
-  if (language === "uz") {
-    return {
-      title: banner.title_uz || banner.title,
-      subtitle: banner.subtitle_uz || banner.subtitle || null,
-      buttonText:
-        banner.button_text_uz || banner.button_text || null,
-    };
-  }
-
-  return {
-    title: banner.title_ru || banner.title,
-    subtitle: banner.subtitle_ru || banner.subtitle || null,
-    buttonText:
-      banner.button_text_ru || banner.button_text || null,
   };
 }
 

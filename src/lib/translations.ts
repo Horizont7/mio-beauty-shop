@@ -83,8 +83,6 @@ export const translations = {
     payment: "Оплата",
     platform: "О компании",
     platformHeroEyebrow: "Официальный сайт MIO Beauty",
-    platformHeroFallback:
-      "MIO Beauty представляет премиальные продукты для ухода, красоты, семьи и дома.",
     platformOverviewEyebrow: "MIO Beauty",
     platformOverviewText:
       "Здесь собраны бренды MIO Beauty, актуальная продукция, новинки, хиты продаж и полезные материалы для покупателей и партнеров.",
@@ -241,8 +239,6 @@ export const translations = {
     payment: "To'lov",
     platform: "Kompaniya haqida",
     platformHeroEyebrow: "MIO Beauty rasmiy sayti",
-    platformHeroFallback:
-      "MIO Beauty parvarish, go'zallik, oila va uy uchun premium mahsulotlarni taqdim etadi.",
     platformOverviewEyebrow: "MIO Beauty",
     platformOverviewText:
       "Bu yerda MIO Beauty brendlari, dolzarb mahsulotlar, yangiliklar, hitlar va xaridorlar hamda hamkorlar uchun foydali materiallar jamlangan.",

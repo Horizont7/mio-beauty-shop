@@ -5,15 +5,6 @@ import { supabase } from "@/lib/supabase";
 
 type Banner = {
   id: number;
-  title: string;
-  title_ru: string | null;
-  title_uz: string | null;
-  subtitle: string | null;
-  subtitle_ru: string | null;
-  subtitle_uz: string | null;
-  button_text: string | null;
-  button_text_ru: string | null;
-  button_text_uz: string | null;
   image: string | null;
   mobile_image: string | null;
   link: string | null;
@@ -24,15 +15,6 @@ type Banner = {
 };
 
 type BannerForm = {
-  title: string;
-  titleRu: string;
-  titleUz: string;
-  subtitle: string;
-  subtitleRu: string;
-  subtitleUz: string;
-  buttonText: string;
-  buttonTextRu: string;
-  buttonTextUz: string;
   image: string;
   mobileImage: string;
   link: string;
@@ -40,15 +22,6 @@ type BannerForm = {
 };
 
 const initialForm: BannerForm = {
-  title: "",
-  titleRu: "",
-  titleUz: "",
-  subtitle: "",
-  subtitleRu: "",
-  subtitleUz: "",
-  buttonText: "",
-  buttonTextRu: "",
-  buttonTextUz: "",
   image: "",
   mobileImage: "",
   link: "",
@@ -56,9 +29,7 @@ const initialForm: BannerForm = {
 };
 
 function getPublicImageUrl(path: string) {
-  const { data } = supabase.storage
-    .from("banners")
-    .getPublicUrl(path);
+  const { data } = supabase.storage.from("banners").getPublicUrl(path);
 
   return data.publicUrl;
 }
@@ -99,11 +70,9 @@ export default function BannersPage() {
   async function loadBanners() {
     setPageLoading(true);
 
-      const { data, error } = await supabase
-        .from("banners")
-        .select(
-          "id,title,title_ru,title_uz,subtitle,subtitle_ru,subtitle_uz,button_text,button_text_ru,button_text_uz,image,mobile_image,link,sort_order,active,created_at,updated_at"
-        )
+    const { data, error } = await supabase
+      .from("banners")
+      .select("id,image,mobile_image,link,sort_order,active,created_at,updated_at")
       .order("sort_order", { ascending: true, nullsFirst: false })
       .order("id", { ascending: false });
 
@@ -182,12 +151,6 @@ export default function BannersPage() {
         .remove([oldPath]);
 
       if (error) {
-        console.error(
-          folder === "desktop"
-            ? "Desktop upload error:"
-            : "Mobile upload error:",
-          error
-        );
         throw new Error(error.message);
       }
     }
@@ -202,12 +165,6 @@ export default function BannersPage() {
       });
 
     if (error) {
-      console.error(
-        folder === "desktop"
-          ? "Desktop upload error:"
-          : "Mobile upload error:",
-        error
-      );
       throw new Error(error.message);
     }
 
@@ -215,12 +172,8 @@ export default function BannersPage() {
   }
 
   async function saveBanner() {
-    if (
-      !form.title.trim() &&
-      !form.titleRu.trim() &&
-      !form.titleUz.trim()
-    ) {
-      alert("Banner nomini kiriting");
+    if (!desktopFile && !form.image && !mobileFile && !form.mobileImage) {
+      alert("Kamida bitta banner rasmini yuklang");
       return;
     }
 
@@ -242,20 +195,6 @@ export default function BannersPage() {
         "mobile"
       );
       const payload = {
-        title:
-          form.title.trim() ||
-          form.titleRu.trim() ||
-          form.titleUz.trim(),
-        title_ru: form.titleRu.trim() || null,
-        title_uz: form.titleUz.trim() || null,
-        subtitle:
-          form.subtitle.trim() || form.subtitleRu.trim() || null,
-        subtitle_ru: form.subtitleRu.trim() || null,
-        subtitle_uz: form.subtitleUz.trim() || null,
-        button_text:
-          form.buttonText.trim() || form.buttonTextRu.trim() || null,
-        button_text_ru: form.buttonTextRu.trim() || null,
-        button_text_uz: form.buttonTextUz.trim() || null,
         image,
         mobile_image: mobileImage,
         link: form.link.trim() || null,
@@ -270,12 +209,12 @@ export default function BannersPage() {
         : await supabase.from("banners").insert([
             {
               ...payload,
+              title: "MIO Beauty banner",
               active: true,
             },
           ]);
 
       if (error) {
-        console.error("Banner insert error:", error);
         alert(error.message);
         setLoading(false);
         return;
@@ -299,15 +238,6 @@ export default function BannersPage() {
     revokeBlob(mobilePreview);
     setEditingId(banner.id);
     setForm({
-      title: banner.title || "",
-      titleRu: banner.title_ru || "",
-      titleUz: banner.title_uz || "",
-      subtitle: banner.subtitle || "",
-      subtitleRu: banner.subtitle_ru || "",
-      subtitleUz: banner.subtitle_uz || "",
-      buttonText: banner.button_text || "",
-      buttonTextRu: banner.button_text_ru || "",
-      buttonTextUz: banner.button_text_uz || "",
       image: banner.image || "",
       mobileImage: banner.mobile_image || "",
       link: banner.link || "",
@@ -360,181 +290,54 @@ export default function BannersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="text-sm font-medium text-[#EEA391]">
-            MIO Beauty admin
-          </p>
-          <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
-            Bannerlar
-          </h1>
-        </div>
+      <div className="rounded-[28px] border border-[#EEA391]/20 bg-[linear-gradient(135deg,#fffaf7,#ffffff)] p-6 shadow-sm">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#B96C5C]">
+              Hero slider
+            </p>
+            <h1 className="mt-2 text-2xl font-bold text-gray-950 sm:text-3xl">
+              Banner management
+            </h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-500">
+              Upload image-only hero slides. Text is now fixed on the
+              homepage, so banners only control visuals and optional
+              destinations.
+            </p>
+          </div>
 
-        <div className="rounded-full bg-[#EEA391]/15 px-4 py-2 text-sm font-semibold text-[#B96C5C]">
-          {activeCount} ta aktiv banner
+          <div className="rounded-full bg-[#EEA391]/15 px-4 py-2 text-sm font-semibold text-[#B96C5C]">
+            {activeCount} active / {banners.length} total
+          </div>
         </div>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[420px_1fr]">
-        <section className="rounded-2xl border border-[#EEA391]/25 bg-white p-5 shadow-sm">
+        <section className="rounded-[28px] border border-[#EEA391]/20 bg-white p-5 shadow-sm">
           <div className="mb-5">
-            <h2 className="text-lg font-semibold text-gray-900">
-              {editingId ? "Bannerni tahrirlash" : "Yangi banner"}
+            <h2 className="text-lg font-semibold text-gray-950">
+              {editingId ? "Edit banner" : "New banner"}
             </h2>
-            <p className="text-sm text-gray-500">
-              Desktop va mobile rasmlarni existing banners jadvaliga saqlang.
+            <p className="mt-1 text-sm text-gray-500">
+              Add a desktop image, optional mobile image, and destination
+              link.
             </p>
           </div>
 
-          <div className="space-y-4">
-              <label className="block">
-                <span className="mb-1 block text-sm font-medium text-gray-700">
-                  Title
-              </span>
-              <input
-                type="text"
-                value={form.title}
-                onChange={(event) =>
-                  updateForm("title", event.target.value)
-                }
-                className="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-[#EEA391] focus:ring-4 focus:ring-[#EEA391]/20"
-                />
-              </label>
+          <div className="space-y-5">
+            <ImageInput
+              label="Desktop image"
+              hint="Recommended wide hero image"
+              preview={desktopPreview}
+              onChange={(event) => handleImageChange(event, "desktop")}
+            />
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className="block">
-                  <span className="mb-1 block text-sm font-medium text-gray-700">
-                    Russian title
-                  </span>
-                  <input
-                    type="text"
-                    value={form.titleRu}
-                    onChange={(event) =>
-                      updateForm("titleRu", event.target.value)
-                    }
-                    className="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-[#EEA391] focus:ring-4 focus:ring-[#EEA391]/20"
-                  />
-                </label>
-
-                <label className="block">
-                  <span className="mb-1 block text-sm font-medium text-gray-700">
-                    Uzbek title
-                  </span>
-                  <input
-                    type="text"
-                    value={form.titleUz}
-                    onChange={(event) =>
-                      updateForm("titleUz", event.target.value)
-                    }
-                    className="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-[#EEA391] focus:ring-4 focus:ring-[#EEA391]/20"
-                  />
-                </label>
-              </div>
-
-              <label className="block">
-                <span className="mb-1 block text-sm font-medium text-gray-700">
-                  Subtitle
-              </span>
-              <textarea
-                value={form.subtitle}
-                onChange={(event) =>
-                  updateForm("subtitle", event.target.value)
-                }
-                rows={3}
-                className="w-full resize-none rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-[#EEA391] focus:ring-4 focus:ring-[#EEA391]/20"
-                />
-              </label>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className="block">
-                  <span className="mb-1 block text-sm font-medium text-gray-700">
-                    Russian subtitle
-                  </span>
-                  <textarea
-                    value={form.subtitleRu}
-                    onChange={(event) =>
-                      updateForm("subtitleRu", event.target.value)
-                    }
-                    rows={3}
-                    className="w-full resize-none rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-[#EEA391] focus:ring-4 focus:ring-[#EEA391]/20"
-                  />
-                </label>
-
-                <label className="block">
-                  <span className="mb-1 block text-sm font-medium text-gray-700">
-                    Uzbek subtitle
-                  </span>
-                  <textarea
-                    value={form.subtitleUz}
-                    onChange={(event) =>
-                      updateForm("subtitleUz", event.target.value)
-                    }
-                    rows={3}
-                    className="w-full resize-none rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-[#EEA391] focus:ring-4 focus:ring-[#EEA391]/20"
-                  />
-                </label>
-              </div>
-
-              <label className="block">
-                <span className="mb-1 block text-sm font-medium text-gray-700">
-                  Button Text
-              </span>
-              <input
-                type="text"
-                value={form.buttonText}
-                onChange={(event) =>
-                  updateForm("buttonText", event.target.value)
-                }
-                className="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-[#EEA391] focus:ring-4 focus:ring-[#EEA391]/20"
-                />
-              </label>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className="block">
-                  <span className="mb-1 block text-sm font-medium text-gray-700">
-                    Russian button text
-                  </span>
-                  <input
-                    type="text"
-                    value={form.buttonTextRu}
-                    onChange={(event) =>
-                      updateForm("buttonTextRu", event.target.value)
-                    }
-                    className="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-[#EEA391] focus:ring-4 focus:ring-[#EEA391]/20"
-                  />
-                </label>
-
-                <label className="block">
-                  <span className="mb-1 block text-sm font-medium text-gray-700">
-                    Uzbek button text
-                  </span>
-                  <input
-                    type="text"
-                    value={form.buttonTextUz}
-                    onChange={(event) =>
-                      updateForm("buttonTextUz", event.target.value)
-                    }
-                    className="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-[#EEA391] focus:ring-4 focus:ring-[#EEA391]/20"
-                  />
-                </label>
-              </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <ImageInput
-                label="Desktop image"
-                preview={desktopPreview}
-                onChange={(event) =>
-                  handleImageChange(event, "desktop")
-                }
-              />
-              <ImageInput
-                label="Mobile image"
-                preview={mobilePreview}
-                onChange={(event) =>
-                  handleImageChange(event, "mobile")
-                }
-              />
-            </div>
+            <ImageInput
+              label="Mobile image"
+              hint="Optional portrait crop for phones"
+              preview={mobilePreview}
+              onChange={(event) => handleImageChange(event, "mobile")}
+            />
 
             <label className="block">
               <span className="mb-1 block text-sm font-medium text-gray-700">
@@ -547,7 +350,7 @@ export default function BannersPage() {
                   updateForm("link", event.target.value)
                 }
                 placeholder="/category/mio-beauty"
-                className="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-[#EEA391] focus:ring-4 focus:ring-[#EEA391]/20"
+                className="w-full rounded-2xl border border-gray-200 px-4 py-3 outline-none transition focus:border-[#EEA391] focus:ring-4 focus:ring-[#EEA391]/20"
               />
             </label>
 
@@ -561,7 +364,7 @@ export default function BannersPage() {
                 onChange={(event) =>
                   updateForm("sortOrder", event.target.value)
                 }
-                className="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-[#EEA391] focus:ring-4 focus:ring-[#EEA391]/20"
+                className="w-full rounded-2xl border border-gray-200 px-4 py-3 outline-none transition focus:border-[#EEA391] focus:ring-4 focus:ring-[#EEA391]/20"
               />
             </label>
 
@@ -570,116 +373,46 @@ export default function BannersPage() {
                 type="button"
                 onClick={saveBanner}
                 disabled={loading}
-                className="rounded-xl bg-[#EEA391] px-5 py-3 font-semibold text-white transition hover:bg-[#df8f7c] disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-2xl bg-[#EEA391] px-5 py-3 font-semibold text-white shadow-[0_14px_30px_rgba(238,163,145,0.28)] transition hover:bg-[#df8f7c] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loading
-                  ? "Saqlanmoqda..."
+                  ? "Saving..."
                   : editingId
-                    ? "Yangilash"
-                    : "Qo'shish"}
+                    ? "Update banner"
+                    : "Create banner"}
               </button>
 
               {editingId && (
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="rounded-xl border border-gray-200 px-5 py-3 font-semibold text-gray-600 transition hover:border-[#EEA391] hover:text-[#B96C5C]"
+                  className="rounded-2xl border border-gray-200 px-5 py-3 font-semibold text-gray-600 transition hover:border-[#EEA391] hover:text-[#B96C5C]"
                 >
-                  Bekor qilish
+                  Cancel
                 </button>
               )}
             </div>
           </div>
         </section>
 
-        <section className="grid gap-5 md:grid-cols-2">
+        <section className="grid content-start gap-5 md:grid-cols-2">
           {pageLoading ? (
-            <div className="rounded-2xl bg-white p-8 text-center text-gray-500 shadow-sm md:col-span-2">
-              Yuklanmoqda...
+            <div className="rounded-[28px] bg-white p-8 text-center text-gray-500 shadow-sm md:col-span-2">
+              Loading banners...
             </div>
           ) : banners.length > 0 ? (
             banners.map((banner) => (
-              <div
+              <BannerCard
                 key={banner.id}
-                className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm"
-              >
-                <div className="h-48 bg-[#EEA391]/10">
-                  {banner.image ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={banner.image}
-                      alt={banner.title}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center text-[#B96C5C]">
-                      Desktop rasm yo&apos;q
-                    </div>
-                  )}
-                </div>
-
-                <div className="space-y-3 p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h3 className="font-semibold text-gray-900">
-                        {banner.title}
-                      </h3>
-                      {banner.subtitle && (
-                        <p className="mt-1 line-clamp-2 text-sm text-gray-500">
-                          {banner.subtitle}
-                        </p>
-                      )}
-                      <p className="text-sm text-gray-500">
-                        Sort: {banner.sort_order ?? 0}
-                      </p>
-                    </div>
-
-                    {banner.active ? (
-                      <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-700">
-                        Aktiv
-                      </span>
-                    ) : (
-                      <span className="rounded-full bg-red-100 px-3 py-1 text-sm font-medium text-red-700">
-                        Nofaol
-                      </span>
-                    )}
-                  </div>
-
-                  <p className="truncate text-sm text-gray-500">
-                    {banner.link ? banner.link : <>Link yo&apos;q</>}
-                  </p>
-
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      onClick={() => editBanner(banner)}
-                      className="rounded-lg bg-[#EEA391] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[#df8f7c]"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        toggleBanner(banner.id, banner.active)
-                      }
-                      className="rounded-lg bg-gray-900 px-3 py-2 text-sm font-semibold text-white transition hover:bg-gray-700"
-                    >
-                      {banner.active ? "Disable" : "Enable"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => deleteBanner(banner.id)}
-                      className="rounded-lg bg-red-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-600"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              </div>
+                banner={banner}
+                onEdit={editBanner}
+                onDelete={deleteBanner}
+                onToggle={toggleBanner}
+              />
             ))
           ) : (
-            <div className="rounded-2xl bg-white p-8 text-center text-gray-500 shadow-sm md:col-span-2">
-              Bannerlar topilmadi
+            <div className="rounded-[28px] bg-white p-8 text-center text-gray-500 shadow-sm md:col-span-2">
+              No banners found
             </div>
           )}
         </section>
@@ -688,12 +421,122 @@ export default function BannersPage() {
   );
 }
 
+function BannerCard({
+  banner,
+  onEdit,
+  onDelete,
+  onToggle,
+}: {
+  banner: Banner;
+  onEdit: (banner: Banner) => void;
+  onDelete: (id: number) => void;
+  onToggle: (id: number, current: boolean) => void;
+}) {
+  const previewImage = banner.image || banner.mobile_image;
+
+  return (
+    <div className="overflow-hidden rounded-[28px] border border-gray-100 bg-white shadow-sm">
+      <div className="relative aspect-[16/9] bg-[#EEA391]/10">
+        {previewImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={previewImage}
+            alt="Hero banner preview"
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-[#B96C5C]">
+            No image uploaded
+          </div>
+        )}
+        <div className="absolute left-4 top-4 flex gap-2">
+          <span className="rounded-full bg-white/85 px-3 py-1 text-xs font-semibold text-gray-700 backdrop-blur">
+            Sort {banner.sort_order ?? 0}
+          </span>
+          <span
+            className={`rounded-full px-3 py-1 text-xs font-semibold backdrop-blur ${
+              banner.active
+                ? "bg-green-100/90 text-green-700"
+                : "bg-red-100/90 text-red-700"
+            }`}
+          >
+            {banner.active ? "Active" : "Inactive"}
+          </span>
+        </div>
+      </div>
+
+      <div className="space-y-4 p-4">
+        <div className="grid gap-3 text-sm text-gray-500 sm:grid-cols-2">
+          <ImageStatus label="Desktop" available={Boolean(banner.image)} />
+          <ImageStatus
+            label="Mobile"
+            available={Boolean(banner.mobile_image)}
+          />
+        </div>
+
+        <p className="truncate rounded-2xl bg-gray-50 px-4 py-3 text-sm text-gray-600">
+          {banner.link || "No destination link"}
+        </p>
+
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => onEdit(banner)}
+            className="rounded-xl bg-[#EEA391] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[#df8f7c]"
+          >
+            Edit
+          </button>
+          <button
+            type="button"
+            onClick={() => onToggle(banner.id, banner.active)}
+            className="rounded-xl bg-gray-950 px-3 py-2 text-sm font-semibold text-white transition hover:bg-gray-700"
+          >
+            {banner.active ? "Deactivate" : "Activate"}
+          </button>
+          <button
+            type="button"
+            onClick={() => onDelete(banner.id)}
+            className="rounded-xl bg-red-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-600"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ImageStatus({
+  label,
+  available,
+}: {
+  label: string;
+  available: boolean;
+}) {
+  return (
+    <div className="rounded-2xl border border-gray-100 px-4 py-3">
+      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gray-400">
+        {label}
+      </p>
+      <p
+        className={`mt-1 font-semibold ${
+          available ? "text-green-700" : "text-gray-400"
+        }`}
+      >
+        {available ? "Uploaded" : "Missing"}
+      </p>
+    </div>
+  );
+}
+
 function ImageInput({
   label,
+  hint,
   preview,
   onChange,
 }: {
   label: string;
+  hint: string;
   preview: string;
   onChange: (event: ChangeEvent<HTMLInputElement>) => void;
 }) {
@@ -702,7 +545,8 @@ function ImageInput({
       <span className="mb-1 block text-sm font-medium text-gray-700">
         {label}
       </span>
-      <div className="mb-2 flex aspect-[4/3] items-center justify-center overflow-hidden rounded-xl border border-dashed border-[#EEA391]/60 bg-[#EEA391]/10">
+      <span className="mb-2 block text-xs text-gray-400">{hint}</span>
+      <div className="mb-3 flex aspect-[16/10] items-center justify-center overflow-hidden rounded-2xl border border-dashed border-[#EEA391]/60 bg-[#EEA391]/10">
         {preview ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -712,7 +556,7 @@ function ImageInput({
           />
         ) : (
           <span className="px-4 text-center text-sm text-[#B96C5C]">
-            Rasm tanlanmagan
+            No image selected
           </span>
         )}
       </div>
@@ -720,7 +564,7 @@ function ImageInput({
         type="file"
         accept="image/*"
         onChange={onChange}
-        className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-[#EEA391] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white"
+        className="w-full rounded-2xl border border-gray-200 px-3 py-2 text-sm file:mr-3 file:rounded-xl file:border-0 file:bg-[#EEA391] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white"
       />
     </label>
   );
