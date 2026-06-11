@@ -29,6 +29,10 @@ type Product = {
   category_id: number | null;
   description_ru: string | null;
   description_uz: string | null;
+  usage_ru: string | null;
+  usage_uz: string | null;
+  ingredients_ru: string | null;
+  ingredients_uz: string | null;
   stock: number | null;
   sku: string | null;
   barcode: string | null;
@@ -72,6 +76,10 @@ type ProductForm = {
   categoryId: string;
   descriptionRu: string;
   descriptionUz: string;
+  usageRu: string;
+  usageUz: string;
+  ingredientsRu: string;
+  ingredientsUz: string;
   stock: string;
   sku: string;
   barcode: string;
@@ -104,6 +112,10 @@ const initialForm: ProductForm = {
   categoryId: "",
   descriptionRu: "",
   descriptionUz: "",
+  usageRu: "",
+  usageUz: "",
+  ingredientsRu: "",
+  ingredientsUz: "",
   stock: "0",
   sku: "",
   barcode: "",
@@ -363,7 +375,7 @@ export default function ProductsPage() {
         supabase
           .from("products")
           .select(
-            "id,slug,name_ru,name_uz,brand,image,price,old_price,category_id,description_ru,description_uz,stock,sku,barcode,weight,volume,sort_order,seo_title_ru,seo_title_uz,seo_description_ru,seo_description_uz,is_new,is_hit,active"
+            "id,slug,name_ru,name_uz,brand,image,price,old_price,category_id,description_ru,description_uz,usage_ru,usage_uz,ingredients_ru,ingredients_uz,stock,sku,barcode,weight,volume,sort_order,seo_title_ru,seo_title_uz,seo_description_ru,seo_description_uz,is_new,is_hit,active"
           )
         .order("sort_order", { ascending: true, nullsFirst: false })
         .order("id", { ascending: false }),
@@ -520,6 +532,10 @@ export default function ProductsPage() {
         category_id: Number.isNaN(categoryId) ? null : categoryId,
         description_ru: form.descriptionRu.trim() || null,
         description_uz: form.descriptionUz.trim() || null,
+        usage_ru: form.usageRu.trim() || null,
+        usage_uz: form.usageUz.trim() || null,
+        ingredients_ru: form.ingredientsRu.trim() || null,
+        ingredients_uz: form.ingredientsUz.trim() || null,
         stock: parseInteger(form.stock),
         sku: form.sku.trim() || null,
         barcode: form.barcode.trim() || null,
@@ -587,6 +603,10 @@ export default function ProductsPage() {
       categoryId: product.category_id?.toString() || "",
         descriptionRu: product.description_ru || "",
         descriptionUz: product.description_uz || "",
+        usageRu: product.usage_ru || "",
+        usageUz: product.usage_uz || "",
+        ingredientsRu: product.ingredients_ru || "",
+        ingredientsUz: product.ingredients_uz || "",
       stock: product.stock?.toString() || "0",
       sku: product.sku || "",
       barcode: product.barcode || "",
@@ -1738,7 +1758,36 @@ export default function ProductsPage() {
               </section>
 
               <section className="space-y-4">
-                <h3 className={sectionTitleClass}>6. RU/UZ SEO</h3>
+                <h3 className={sectionTitleClass}>6. Usage and ingredients</h3>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {[
+                    ["Usage RU", "usageRu"],
+                    ["Usage UZ", "usageUz"],
+                    ["Ingredients RU", "ingredientsRu"],
+                    ["Ingredients UZ", "ingredientsUz"],
+                  ].map(([label, field]) => (
+                    <label key={field} className="block">
+                      <span className="mb-1 block text-sm font-semibold text-gray-700">
+                        {label}
+                      </span>
+                      <textarea
+                        value={form[field as keyof ProductForm] as string}
+                        onChange={(event) =>
+                          updateForm(
+                            field as keyof ProductForm,
+                            event.target.value
+                          )
+                        }
+                        rows={4}
+                        className={inputClass}
+                      />
+                    </label>
+                  ))}
+                </div>
+              </section>
+
+              <section className="space-y-4">
+                <h3 className={sectionTitleClass}>7. RU/UZ SEO</h3>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="block">
                     <span className="mb-1 block text-sm font-semibold text-gray-700">

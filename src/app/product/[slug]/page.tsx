@@ -4,6 +4,7 @@ import { getActiveNavigationCategories } from "@/lib/categories";
 import { getLocalizedProduct } from "@/lib/localized-data";
 import {
   getActiveProductBySlug,
+  getActiveReviewsByProductId,
   getProductImages,
   getRelatedProducts,
 } from "@/lib/products";
@@ -63,12 +64,14 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const relatedProducts = product
     ? await getRelatedProducts(product.category_id, product.id)
     : [];
+  const reviews = product ? await getActiveReviewsByProductId(product.id) : [];
 
   return (
     <ProductDetailContent
       product={product}
       images={images}
       relatedProducts={relatedProducts}
+      reviews={reviews}
       categories={categories}
     />
   );

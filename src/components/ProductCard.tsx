@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { BrandTheme, getBrandTheme } from "@/lib/brand";
+import { useCommerce } from "@/lib/commerce";
 import { useLanguage } from "@/lib/language";
 import { getLocalizedProduct } from "@/lib/localized-data";
 import { CatalogProduct } from "@/lib/products";
@@ -58,9 +59,11 @@ export default function ProductCard({
   compact = false,
 }: ProductCardProps) {
   const { language, t } = useLanguage();
+  const { addToCart, isFavorite, toggleFavorite } = useCommerce();
   const localizedProduct = getLocalizedProduct(product, language);
   const price = formatPrice(product.price, language);
   const oldPrice = formatPrice(product.old_price ?? null, language);
+  const favorite = isFavorite(product.id);
 
   return (
     <Link
@@ -94,6 +97,21 @@ export default function ProductCard({
             </span>
           )}
         </div>
+        <button
+          type="button"
+          aria-label={favorite ? t("removeFavorite") : t("addFavorite")}
+          onClick={(event) => {
+            event.preventDefault();
+            toggleFavorite(product.id);
+          }}
+          className={`absolute right-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-white/70 text-sm font-black shadow-sm backdrop-blur transition sm:right-4 sm:top-4 ${
+            favorite
+              ? "bg-[#EEA391] text-white"
+              : "bg-white/85 text-[#B96C5C]"
+          }`}
+        >
+          H
+        </button>
 
         {product.image ? (
           <ProductCardImage
@@ -132,9 +150,16 @@ export default function ProductCard({
               </p>
             )}
           </div>
-          <span className="shrink-0 rounded-full bg-[var(--brand-ink)] px-3 py-2 text-xs font-semibold text-white shadow-[0_12px_28px_rgba(33,31,30,0.18)] transition duration-300 group-hover:scale-105 group-hover:bg-[#EEA391] sm:px-4 sm:text-sm">
+          <button
+            type="button"
+            onClick={(event) => {
+              event.preventDefault();
+              addToCart(product);
+            }}
+            className="shrink-0 rounded-full bg-[var(--brand-ink)] px-3 py-2 text-xs font-semibold text-white shadow-[0_12px_28px_rgba(33,31,30,0.18)] transition duration-300 group-hover:scale-105 group-hover:bg-[#EEA391] sm:px-4 sm:text-sm"
+          >
             {t("addToCart")}
-          </span>
+          </button>
         </div>
       </div>
     </Link>

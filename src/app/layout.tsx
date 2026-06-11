@@ -1,5 +1,6 @@
 import "./globals.css";
 import type { Metadata } from "next";
+import { CommerceProvider } from "@/lib/commerce";
 import { LanguageProvider } from "@/lib/language";
 
 export const metadata: Metadata = {
@@ -39,7 +40,9 @@ export default function RootLayout({
   return (
     <html lang="ru">
       <body>
-        <LanguageProvider>{children}</LanguageProvider>
+        <LanguageProvider>
+          <CommerceProvider>{children}</CommerceProvider>
+        </LanguageProvider>
       </body>
     </html>
   );

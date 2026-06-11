@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useCommerce } from "@/lib/commerce";
 import { useLanguage } from "@/lib/language";
 
 const navItems = [
@@ -15,6 +16,7 @@ const navItems = [
 export default function MobileBottomNavigation() {
   const pathname = usePathname();
   const { t } = useLanguage();
+  const { cartCount, favoritesCount } = useCommerce();
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-[#f3cfc4] bg-white/95 px-2 pb-[calc(env(safe-area-inset-bottom)+0.45rem)] pt-2 shadow-[0_-18px_45px_rgba(180,118,103,0.14)] backdrop-blur md:hidden">
@@ -49,8 +51,15 @@ export default function MobileBottomNavigation() {
               {active && (
                 <span className="absolute left-1/2 top-1 h-1 w-5 -translate-x-1/2 rounded-full bg-[#EEA391]" />
               )}
-              {item.href === "/cart" && (
-                <span className="absolute right-4 top-1 hidden h-4 min-w-4 rounded-full bg-[#EEA391] px-1 text-[9px] leading-4 text-white" />
+              {item.href === "/cart" && cartCount > 0 && (
+                <span className="absolute right-4 top-1 h-4 min-w-4 rounded-full bg-[#EEA391] px-1 text-center text-[9px] leading-4 text-white">
+                  {cartCount}
+                </span>
+              )}
+              {item.href === "/profile" && favoritesCount > 0 && (
+                <span className="absolute right-4 top-1 h-4 min-w-4 rounded-full bg-[#211f1e] px-1 text-center text-[9px] leading-4 text-white">
+                  {favoritesCount}
+                </span>
               )}
             </Link>
           );

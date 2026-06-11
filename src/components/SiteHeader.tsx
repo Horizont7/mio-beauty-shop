@@ -7,6 +7,7 @@ import { Language, languages } from "@/lib/translations";
 import { useLanguage } from "@/lib/language";
 import { getLocalizedCategory } from "@/lib/localized-data";
 import MobileBottomNavigation from "@/components/MobileBottomNavigation";
+import { useCommerce } from "@/lib/commerce";
 
 export default function SiteHeader({
   categories,
@@ -15,6 +16,7 @@ export default function SiteHeader({
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const { language, setLanguage, t } = useLanguage();
+  const { cartCount, favoritesCount } = useCommerce();
 
   return (
     <>
@@ -104,6 +106,28 @@ export default function SiteHeader({
             className="hidden rounded-full border border-black/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] sm:inline-flex"
           >
             {t("shop")}
+          </Link>
+          <Link
+            href="/cart"
+            className="relative hidden rounded-full border border-black/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] md:inline-flex"
+          >
+            {t("cart")}
+            {cartCount > 0 && (
+              <span className="absolute -right-2 -top-2 min-w-5 rounded-full bg-[#EEA391] px-1 text-center text-[10px] leading-5 text-white">
+                {cartCount}
+              </span>
+            )}
+          </Link>
+          <Link
+            href="/favorites"
+            className="relative hidden rounded-full border border-black/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] md:inline-flex"
+          >
+            {t("favorites")}
+            {favoritesCount > 0 && (
+              <span className="absolute -right-2 -top-2 min-w-5 rounded-full bg-[#211f1e] px-1 text-center text-[10px] leading-5 text-white">
+                {favoritesCount}
+              </span>
+            )}
           </Link>
         </div>
       </div>

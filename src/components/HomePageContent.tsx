@@ -280,15 +280,14 @@ export default function HomePageContent({
             <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#b97667] sm:mb-6 sm:text-xs sm:tracking-[0.32em]">
               {t("platformHeroEyebrow")}
             </p>
-            <h1 className="text-4xl font-semibold leading-[0.9] text-[var(--brand-ink)] sm:text-7xl lg:text-8xl">
+            <h1 className="bg-[linear-gradient(120deg,#EEA391_0%,#d98272_42%,#6f463b_100%)] bg-clip-text text-4xl font-semibold leading-[0.9] text-transparent sm:text-7xl lg:text-8xl">
               MIO BEAUTY
             </h1>
             <p className="mt-3 text-xl font-medium leading-tight text-[#b97667] sm:mt-6 sm:text-4xl">
-              Go&apos;zallik bizdan boshlanadi
+              {t("heroSubtitle")}
             </p>
             <p className="mt-3 max-w-lg text-sm leading-6 text-[var(--brand-muted)] sm:mt-7 sm:text-lg sm:leading-8">
-              Premium beauty, baby and home care products for everyday
-              life.
+              {t("heroDescription")}
             </p>
             <div className="mt-5 flex flex-wrap gap-3 sm:mt-9 sm:gap-4">
               <button
@@ -296,13 +295,13 @@ export default function HomePageContent({
                 onClick={openCatalog}
                 className="rounded-full bg-[var(--brand-ink)] px-5 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-white shadow-[0_18px_45px_rgba(33,31,30,0.18)] transition hover:-translate-y-0.5 hover:bg-[#EEA391] sm:px-8 sm:py-4 sm:text-sm sm:tracking-[0.16em]"
               >
-                Browse Catalog
+                {t("heroCatalogButton")}
               </button>
               <Link
                 href="#platform"
                 className="rounded-full border border-[#d7b2a7] bg-white/80 px-5 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--brand-ink)] shadow-sm transition hover:-translate-y-0.5 hover:border-[#EEA391] sm:px-8 sm:py-4 sm:text-sm sm:tracking-[0.16em]"
               >
-                Learn More
+                {t("heroMoreButton")}
               </Link>
             </div>
             <div className="mt-5 grid max-w-lg grid-cols-3 gap-2 sm:mt-10 sm:gap-3">

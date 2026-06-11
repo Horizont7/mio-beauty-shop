@@ -7,14 +7,20 @@ import ProductCard from "@/components/ProductCard";
 import SiteHeader from "@/components/SiteHeader";
 import { BrandTheme, getBrandTheme } from "@/lib/brand";
 import { NavigationCategory } from "@/lib/categories";
+import { useCommerce } from "@/lib/commerce";
 import { useLanguage } from "@/lib/language";
 import { getLocalizedProduct } from "@/lib/localized-data";
-import { CatalogProduct, ProductDetail } from "@/lib/products";
+import {
+  CatalogProduct,
+  ProductDetail,
+  ProductReview,
+} from "@/lib/products";
 
 type ProductDetailContentProps = {
   product: ProductDetail | null;
   images: string[];
   relatedProducts: CatalogProduct[];
+  reviews: ProductReview[];
   categories: NavigationCategory[];
 };
 
@@ -26,15 +32,11 @@ function formatPrice(price: number | null, language: "ru" | "uz") {
   return (
     new Intl.NumberFormat(language === "ru" ? "ru-RU" : "uz-UZ").format(
       price
-    ) + (language === "ru" ? " сум" : " so'm")
+    ) + (language === "ru" ? " sum" : " so'm")
   );
 }
 
-function ProductStatus({
-  product,
-}: {
-  product: ProductDetail;
-}) {
+function ProductStatus({ product }: { product: ProductDetail }) {
   const { t } = useLanguage();
   const inStock = product.stock === null || product.stock > 0;
 
@@ -55,9 +57,11 @@ export default function ProductDetailContent({
   product,
   images,
   relatedProducts,
+  reviews,
   categories,
 }: ProductDetailContentProps) {
   const { language, t } = useLanguage();
+  const { addToCart, isFavorite, toggleFavorite } = useCommerce();
   const [selectedImage, setSelectedImage] = useState(images[0] || "");
   const [selectedImageLoaded, setSelectedImageLoaded] = useState(false);
   const [loadedThumbnails, setLoadedThumbnails] = useState<
@@ -86,9 +90,12 @@ export default function ProductDetailContent({
         { label: "Weight", value: product.weight },
       ].filter((item) => item.value)
     : [];
+  const favorite = product ? isFavorite(product.id) : false;
 
-  const tabs = useMemo(
-    () => [
+  const tabs = useMemo(() => {
+    if (!product) return [];
+
+    return [
       {
         id: "description" as const,
         label: t("productDescription"),
@@ -98,27 +105,30 @@ export default function ProductDetailContent({
       {
         id: "usage" as const,
         label: t("productUsage"),
-        content: t("productUsageEmpty"),
+        content:
+          language === "uz"
+            ? product.usage_uz || product.usage_ru || t("productUsageEmpty")
+            : product.usage_ru || product.usage_uz || t("productUsageEmpty"),
       },
       {
         id: "ingredients" as const,
-        label: language === "ru" ? "Состав" : "Tarkibi",
+        label: t("productIngredients"),
         content:
-          language === "ru"
-            ? "Информация о составе скоро будет добавлена."
-            : "Tarkib haqida ma'lumot tez orada qo'shiladi.",
+          language === "uz"
+            ? product.ingredients_uz ||
+              product.ingredients_ru ||
+              t("productIngredientsEmpty")
+            : product.ingredients_ru ||
+              product.ingredients_uz ||
+              t("productIngredientsEmpty"),
       },
       {
         id: "reviews" as const,
-        label: language === "ru" ? "Отзывы" : "Sharhlar",
-        content:
-          language === "ru"
-            ? "Отзывы покупателей скоро появятся."
-            : "Xaridorlar sharhlari tez orada qo'shiladi.",
+        label: t("reviews"),
+        content: "",
       },
-    ],
-    [language, localizedProduct?.description, t]
-  );
+    ];
+  }, [language, localizedProduct?.description, product, t]);
 
   if (!product || !localizedProduct) {
     return (
@@ -189,7 +199,6 @@ export default function ProductDetailContent({
                   type="button"
                   onClick={() => {
                     if (image === selectedImage) return;
-
                     setSelectedImage(image);
                     setSelectedImageLoaded(Boolean(loadedThumbnails[image]));
                   }}
@@ -281,16 +290,17 @@ export default function ProductDetailContent({
           <div className="mt-6 hidden gap-3 sm:grid sm:grid-cols-[1fr_auto]">
             <button
               type="button"
+              onClick={() => addToCart(product)}
               className="rounded-full bg-[#EEA391] px-8 py-4 text-sm font-semibold uppercase tracking-[0.16em] text-white shadow-lg shadow-[#EEA391]/25 transition hover:-translate-y-0.5 hover:bg-[#df8f7c]"
             >
               {t("addToCart")}
             </button>
             <button
               type="button"
-              aria-label={language === "ru" ? "В избранное" : "Sevimlilarga qo'shish"}
+              onClick={() => toggleFavorite(product.id)}
               className="rounded-full border border-[#EEA391]/50 bg-white px-6 py-4 text-sm font-semibold uppercase tracking-[0.16em] text-[#B96C5C] transition hover:border-[#EEA391] hover:bg-[#fff1ed]"
             >
-              {language === "ru" ? "В избранное" : "Sevimli"}
+              {favorite ? t("removeFavorite") : t("addFavorite")}
             </button>
           </div>
         </div>
@@ -317,9 +327,44 @@ export default function ProductDetailContent({
               </button>
             ))}
           </div>
-          <p className="mt-5 whitespace-pre-line text-sm leading-7 text-[var(--brand-muted)] sm:mt-6 sm:text-base sm:leading-8">
-            {tabs.find((tab) => tab.id === activeTab)?.content}
-          </p>
+
+          {activeTab === "reviews" ? (
+            <div className="mt-5 space-y-3 sm:mt-6">
+              {reviews.length > 0 ? (
+                reviews.map((review) => (
+                  <div
+                    key={review.id}
+                    className="rounded-2xl border border-[#f1d4cc] bg-[#fff8f6] p-4"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="font-semibold text-[var(--brand-ink)]">
+                        {review.customer_name || "MIO customer"}
+                      </p>
+                      <p className="text-sm font-bold text-[#B96C5C]">
+                        {review.rating || 5}/5
+                      </p>
+                    </div>
+                    <p className="mt-2 text-sm leading-6 text-[var(--brand-muted)]">
+                      {review.comment}
+                    </p>
+                    <p className="mt-2 text-xs text-[var(--brand-muted)]">
+                      {new Date(review.created_at).toLocaleDateString(
+                        language === "ru" ? "ru-RU" : "uz-UZ"
+                      )}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-[var(--brand-muted)]">
+                  {t("reviewsEmpty")}
+                </p>
+              )}
+            </div>
+          ) : (
+            <p className="mt-5 whitespace-pre-line text-sm leading-7 text-[var(--brand-muted)] sm:mt-6 sm:text-base sm:leading-8">
+              {tabs.find((tab) => tab.id === activeTab)?.content}
+            </p>
+          )}
         </div>
       </section>
 
@@ -327,11 +372,11 @@ export default function ProductDetailContent({
         <section className="mx-auto max-w-7xl px-4 pb-28 pt-8 sm:px-6 sm:py-16">
           <div className="mb-5 flex items-end justify-between gap-4 sm:mb-10">
             <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#B96C5C] sm:text-xs sm:tracking-[0.28em]">
-              {t("relatedProducts")}
-            </p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#B96C5C] sm:text-xs sm:tracking-[0.28em]">
+                {t("relatedProducts")}
+              </p>
               <h2 className="mt-2 text-2xl font-semibold text-[var(--brand-ink)] sm:text-3xl">
-                {language === "ru" ? "Похожие продукты" : "O'xshash mahsulotlar"}
+                {t("relatedProducts")}
               </h2>
             </div>
           </div>
@@ -361,6 +406,7 @@ export default function ProductDetailContent({
           </div>
           <button
             type="button"
+            onClick={() => addToCart(product)}
             className="h-12 rounded-full bg-[#EEA391] px-5 text-sm font-semibold text-white shadow-lg shadow-[#EEA391]/20"
           >
             {t("addToCart")}

@@ -2,12 +2,16 @@ import AdminResourcePage from "@/components/admin/AdminResourcePage";
 
 const statusOptions = [
   "new",
-  "accepted",
-  "packing",
-  "delivering",
-  "completed",
+  "processing",
+  "shipped",
+  "delivered",
   "cancelled",
 ].map((status) => ({ label: status, value: status }));
+
+const paymentStatusOptions = ["pending", "paid", "cancelled"].map((status) => ({
+  label: status,
+  value: status,
+}));
 
 export default function OrdersPage() {
   return (
@@ -15,28 +19,27 @@ export default function OrdersPage() {
       title="Orders"
       description="View orders, update fulfillment status and manage checkout records."
       tableName="orders"
-      select="id,customer_name,phone,address,total_price,status,payment_method,delivery_method,created_at"
+      select="id,order_number,customer_name,customer_phone,customer_city,customer_address,customer_comment,payment_method,payment_status,order_status,subtotal,delivery_price,total,created_at"
       orderBy="created_at"
-      searchKeys={["customer_name", "phone", "address", "status"]}
-      setupHint="Create orders and order_items tables from docs/admin-supabase-setup.sql. If order_items exists, connect an order details drawer in the next pass."
+      searchKeys={["order_number", "customer_name", "customer_phone"]}
+      setupHint="Apply the Phase 2 commerce migration to create orders and order_items."
       allowActiveToggle={false}
       fields={[
         { key: "customer_name", label: "Customer name", required: true },
-        { key: "phone", label: "Phone", required: true },
-        { key: "address", label: "Address", type: "textarea" },
-        { key: "total_price", label: "Total price", type: "number" },
-        { key: "status", label: "Status", type: "select", options: statusOptions },
-        { key: "payment_method", label: "Payment method" },
-        { key: "delivery_method", label: "Delivery method" },
+        { key: "customer_phone", label: "Phone", required: true },
+        { key: "customer_city", label: "City" },
+        { key: "customer_address", label: "Address", type: "textarea" },
+        { key: "customer_comment", label: "Comment", type: "textarea" },
+        { key: "payment_status", label: "Payment status", type: "select", options: paymentStatusOptions },
+        { key: "order_status", label: "Order status", type: "select", options: statusOptions },
       ]}
       columns={[
-        { key: "id", label: "ID" },
+        { key: "order_number", label: "Order Number" },
         { key: "customer_name", label: "Customer" },
-        { key: "phone", label: "Phone" },
-        { key: "total_price", label: "Total" },
-        { key: "status", label: "Status" },
-        { key: "payment_method", label: "Payment" },
-        { key: "delivery_method", label: "Delivery" },
+        { key: "customer_phone", label: "Phone" },
+        { key: "total", label: "Total" },
+        { key: "payment_status", label: "Payment Status" },
+        { key: "order_status", label: "Order Status" },
         { key: "created_at", label: "Created" },
       ]}
     />

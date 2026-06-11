@@ -16,6 +16,8 @@ export type CategoryProduct = {
   price: number | null;
   old_price?: number | null;
   category_id: number | null;
+  stock?: number | null;
+  sku?: string | null;
   is_new: boolean;
   is_hit: boolean;
 };
@@ -36,6 +38,8 @@ export type CatalogProduct = {
   price: number | null;
   old_price?: number | null;
   category_id: number | null;
+  stock?: number | null;
+  sku?: string | null;
   is_new: boolean;
   is_hit: boolean;
 };
@@ -47,7 +51,21 @@ export type ProductDetail = CatalogProduct & {
   barcode: string | null;
   weight: string | null;
   volume: string | null;
+  usage_ru: string | null;
+  usage_uz: string | null;
+  ingredients_ru: string | null;
+  ingredients_uz: string | null;
   active: boolean;
+};
+
+export type ProductReview = {
+  id: number;
+  product_id: number;
+  customer_name: string | null;
+  rating: number | null;
+  comment: string | null;
+  active: boolean;
+  created_at: string;
 };
 
 type ProductImageRow = {
@@ -58,7 +76,7 @@ type ProductImageRow = {
 };
 
 const productDetailSelect =
-  "id,slug,name_ru,name_uz,description_ru,description_uz,seo_title_ru,seo_title_uz,seo_description_ru,seo_description_uz,brand,image,price,old_price,category_id,stock,sku,barcode,weight,volume,is_new,is_hit,active";
+  "id,slug,name_ru,name_uz,description_ru,description_uz,seo_title_ru,seo_title_uz,seo_description_ru,seo_description_uz,brand,image,price,old_price,category_id,stock,sku,barcode,weight,volume,usage_ru,usage_uz,ingredients_ru,ingredients_uz,is_new,is_hit,active";
 
 function uniqueImages(images: Array<string | null | undefined>) {
   return Array.from(
@@ -70,7 +88,7 @@ export async function getActiveProductsByCategoryId(categoryId: number) {
   const { data, error } = await supabase
     .from("products")
     .select(
-      "id,slug,name_ru,name_uz,description_ru,description_uz,seo_title_ru,seo_title_uz,seo_description_ru,seo_description_uz,brand,image,price,old_price,category_id,is_new,is_hit"
+      "id,slug,name_ru,name_uz,description_ru,description_uz,seo_title_ru,seo_title_uz,seo_description_ru,seo_description_uz,brand,image,price,old_price,category_id,stock,sku,is_new,is_hit"
     )
     .eq("category_id", categoryId)
     .eq("active", true)
@@ -146,7 +164,7 @@ export async function getRelatedProducts(
   const { data, error } = await supabase
     .from("products")
     .select(
-      "id,slug,name_ru,name_uz,description_ru,description_uz,seo_title_ru,seo_title_uz,seo_description_ru,seo_description_uz,brand,image,price,old_price,category_id,is_new,is_hit"
+      "id,slug,name_ru,name_uz,description_ru,description_uz,seo_title_ru,seo_title_uz,seo_description_ru,seo_description_uz,brand,image,price,old_price,category_id,stock,sku,is_new,is_hit"
     )
     .eq("category_id", categoryId)
     .eq("active", true)
@@ -165,7 +183,7 @@ export async function getActiveCatalogProducts() {
   const { data, error } = await supabase
     .from("products")
     .select(
-      "id,slug,name_ru,name_uz,description_ru,description_uz,seo_title_ru,seo_title_uz,seo_description_ru,seo_description_uz,brand,image,price,old_price,category_id,is_new,is_hit"
+      "id,slug,name_ru,name_uz,description_ru,description_uz,seo_title_ru,seo_title_uz,seo_description_ru,seo_description_uz,brand,image,price,old_price,category_id,stock,sku,is_new,is_hit"
     )
     .eq("active", true)
     .order("sort_order", { ascending: true, nullsFirst: false });
@@ -178,7 +196,7 @@ export async function getActiveCatalogProducts() {
     const fallback = await supabase
       .from("products")
       .select(
-        "id,slug,name_ru,name_uz,description_ru,description_uz,seo_title_ru,seo_title_uz,seo_description_ru,seo_description_uz,brand,image,price,old_price,category_id,is_new"
+        "id,slug,name_ru,name_uz,description_ru,description_uz,seo_title_ru,seo_title_uz,seo_description_ru,seo_description_uz,brand,image,price,old_price,category_id,stock,sku,is_new"
       )
       .eq("active", true)
       .order("sort_order", { ascending: true, nullsFirst: false });
@@ -194,4 +212,24 @@ export async function getActiveCatalogProducts() {
   }
 
   return (data || []) as CatalogProduct[];
+}
+
+export async function getActiveReviewsByProductId(productId: number) {
+  const ninetyDaysAgo = new Date();
+  ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+
+  const { data, error } = await supabase
+    .from("reviews")
+    .select("id,product_id,customer_name,rating,comment,active,created_at")
+    .eq("product_id", productId)
+    .eq("active", true)
+    .gte("created_at", ninetyDaysAgo.toISOString())
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    if (error.message.includes("reviews")) return [];
+    throw new Error(error.message);
+  }
+
+  return (data || []) as ProductReview[];
 }
