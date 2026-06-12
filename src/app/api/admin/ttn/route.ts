@@ -2,15 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import ExcelJS from "exceljs";
 import { requireAdmin, adminAuthErrorResponse } from "@/lib/admin/auth";
 
+// ─── Helpers ────────────────────────────────────────────────────────────────
 function tv(v: unknown) {
   return typeof v === "string" ? v : v != null ? String(v) : "";
 }
 function nv(v: unknown) {
   const n = Number(v ?? 0);
   return Number.isFinite(n) ? n : 0;
-}
-function fmt(n: number) {
-  return `${n.toLocaleString("ru-RU")} сум`;
 }
 function fmtDate(iso: string) {
   try {
@@ -23,7 +21,6 @@ function fmtDate(iso: string) {
     return iso;
   }
 }
-
 function paymentLabel(method: string) {
   const map: Record<string, string> = {
     cash: "Наличные",
@@ -34,16 +31,59 @@ function paymentLabel(method: string) {
   };
   return map[method] ?? method ?? "—";
 }
+// Russian-style space thousands separator  e.g. 88 800 сум
+function fmtMoney(n: number) {
+  return n.toLocaleString("ru-RU") + " сум";
+}
 
+// ─── WorksheetBuilder helpers ───────────────────────────────────────────────
+type BorderSide = "thin" | "medium" | "thick" | "hair" | "dotted" | "dashed";
+
+function applyBorderBox(
+  ws: ExcelJS.Worksheet,
+  r1: number,
+  c1: number,
+  r2: number,
+  c2: number,
+  style: BorderSide = "thin",
+  color = "CCCCCC"
+) {
+  for (let r = r1; r <= r2; r++) {
+    for (let c = c1; c <= c2; c++) {
+      const cell = ws.getCell(r, c);
+      const top = r === r1 ? { style, color: { argb: `FF${color}` } } : undefined;
+      const bottom = r === r2 ? { style, color: { argb: `FF${color}` } } : undefined;
+      const left = c === c1 ? { style, color: { argb: `FF${color}` } } : undefined;
+      const right = c === c2 ? { style, color: { argb: `FF${color}` } } : undefined;
+      if (top || bottom || left || right) {
+        cell.border = {
+          ...(cell.border ?? {}),
+          ...(top ? { top } : {}),
+          ...(bottom ? { bottom } : {}),
+          ...(left ? { left } : {}),
+          ...(right ? { right } : {}),
+        };
+      }
+    }
+  }
+}
+
+// ─── POST handler ───────────────────────────────────────────────────────────
 export async function POST(request: NextRequest) {
   let adminInfo: Awaited<ReturnType<typeof requireAdmin>>;
   try {
     adminInfo = await requireAdmin(request);
   } catch (err) {
-    return adminAuthErrorResponse(err) ?? NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return (
+      adminAuthErrorResponse(err) ??
+      NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    );
   }
 
-  const body = (await request.json()) as { orderId?: unknown; managerName?: unknown };
+  const body = (await request.json()) as {
+    orderId?: unknown;
+    managerName?: unknown;
+  };
   const orderId = body.orderId;
   const managerName = tv(body.managerName) || "Администратор";
 
@@ -53,28 +93,28 @@ export async function POST(request: NextRequest) {
 
   const { supabase } = adminInfo;
 
-  // Fetch order — try modern schema first
+  // ── Fetch order (modern → legacy fallback) ─────────────────────────────
   let order: Record<string, unknown> | null = null;
   let orderSchema: "modern" | "legacy" = "modern";
 
-  const modernOrderResult = await supabase
+  const modernOrder = await supabase
     .from("orders")
-    .select("id,order_number,customer_name,customer_phone,customer_city,customer_address,customer_comment,payment_method,payment_status,order_status,subtotal,delivery_price,total,created_at")
+    .select(
+      "id,order_number,customer_name,customer_phone,customer_city,customer_address,payment_method,subtotal,delivery_price,total,created_at"
+    )
     .eq("id", orderId)
     .maybeSingle();
 
-  if (!modernOrderResult.error && modernOrderResult.data) {
-    order = modernOrderResult.data as Record<string, unknown>;
-    orderSchema = "modern";
+  if (!modernOrder.error && modernOrder.data) {
+    order = modernOrder.data as Record<string, unknown>;
   } else {
-    const legacyResult = await supabase
+    const legacyOrder = await supabase
       .from("orders")
-      .select("id,customer_name,phone,address,total_price,status,payment_method,created_at")
+      .select("id,customer_name,phone,address,total_price,payment_method,created_at")
       .eq("id", orderId)
       .maybeSingle();
-
-    if (!legacyResult.error && legacyResult.data) {
-      order = legacyResult.data as Record<string, unknown>;
+    if (!legacyOrder.error && legacyOrder.data) {
+      order = legacyOrder.data as Record<string, unknown>;
       orderSchema = "legacy";
     }
   }
@@ -87,7 +127,7 @@ export async function POST(request: NextRequest) {
     orderSchema === "modern"
       ? tv(order.order_number) || `MIO-${order.id}`
       : `MIO-${order.id}`;
-  const customerName = tv(orderSchema === "modern" ? order.customer_name : order.customer_name);
+  const customerName = tv(order.customer_name);
   const customerPhone = tv(orderSchema === "modern" ? order.customer_phone : order.phone);
   const customerAddress =
     orderSchema === "modern"
@@ -99,31 +139,30 @@ export async function POST(request: NextRequest) {
   const deliveryPrice = nv(orderSchema === "modern" ? order.delivery_price : 0);
   const createdAt = tv(order.created_at);
 
-  // Fetch order items — try modern, then legacy
+  // ── Fetch order items ──────────────────────────────────────────────────
   let rawItems: Record<string, unknown>[] = [];
 
-  const modernItemsResult = await supabase
+  const modernItems = await supabase
     .from("order_items")
     .select("id,product_name,product_sku,quantity,unit_price,total_price")
     .eq("order_id", orderId)
     .order("id", { ascending: true });
 
-  if (!modernItemsResult.error && modernItemsResult.data?.length) {
-    rawItems = modernItemsResult.data as Record<string, unknown>[];
+  if (!modernItems.error && modernItems.data?.length) {
+    rawItems = modernItems.data as Record<string, unknown>[];
   } else {
-    const legacyItemsResult = await supabase
+    const legacyItems = await supabase
       .from("order_items")
       .select("id,product_name,sku,quantity,unit_price,price,total_price")
       .eq("order_id", orderId)
       .order("id", { ascending: true });
-
-    if (!legacyItemsResult.error) {
-      rawItems = (legacyItemsResult.data || []) as Record<string, unknown>[];
+    if (!legacyItems.error) {
+      rawItems = (legacyItems.data || []) as Record<string, unknown>[];
     }
   }
 
-  const items = rawItems.map((r, index) => ({
-    num: index + 1,
+  const items = rawItems.map((r, i) => ({
+    num: i + 1,
     sku: tv(r.product_sku ?? r.sku) || "—",
     name: tv(r.product_name) || "Товар",
     qty: nv(r.quantity),
@@ -134,270 +173,406 @@ export async function POST(request: NextRequest) {
   }));
 
   const totalQty = items.reduce((s, i) => s + i.qty, 0);
-  const totalAmount = items.reduce((s, i) => s + i.total, total);
 
-  // ─── Build Workbook ──────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════════════════
+  //  WORKBOOK
+  // ═══════════════════════════════════════════════════════════════════════
   const wb = new ExcelJS.Workbook();
   wb.creator = "MIO Beauty";
   wb.created = new Date();
 
   const ws = wb.addWorksheet("ТТН", {
     pageSetup: {
-      paperSize: 9, // A4
+      paperSize: 9,          // A4
       orientation: "landscape",
       fitToPage: true,
       fitToWidth: 1,
       fitToHeight: 0,
+      margins: {
+        left: 0.55, right: 0.55,
+        top: 0.55, bottom: 0.55,
+        header: 0.2, footer: 0.2,
+      },
     },
   });
 
-  // Column widths
+  // ── Column widths (9 cols, fits A4 landscape) ──────────────────────────
   ws.columns = [
-    { width: 5 },   // №
-    { width: 14 },  // SKU
-    { width: 32 },  // Name
-    { width: 8 },   // Qty
-    { width: 8 },   // Unit
-    { width: 16 },  // Price
-    { width: 12 },  // Discount
-    { width: 16 },  // Final Price
-    { width: 18 },  // Total
+    { key: "a", width: 5.5  },   // 1  №
+    { key: "b", width: 13   },   // 2  SKU
+    { key: "c", width: 34   },   // 3  Product name
+    { key: "d", width: 8    },   // 4  Qty
+    { key: "e", width: 7    },   // 5  Unit
+    { key: "f", width: 14   },   // 6  Price
+    { key: "g", width: 11   },   // 7  Discount
+    { key: "h", width: 14   },   // 8  Final price
+    { key: "i", width: 16   },   // 9  Total
   ];
 
-  const COLS = 9;
-  const brandColor = "C8523A"; // MIO Berry
-  const headerBg = "FFF5F2";
-  const tableBg = "FFF8F6";
-  const darkText = "1A1A1A";
-  const mutedText = "666666";
+  // ── Brand palette ──────────────────────────────────────────────────────
+  const C = {
+    orange:      "D97030",  // header / accents
+    orangeLight: "FCF0E8",  // info block background
+    orangeMid:   "F5CCA8",  // info block border / table header border
+    white:       "FFFFFF",
+    dark:        "1A1A1A",
+    muted:       "777777",
+    gridBorder:  "DDDDDD",
+    rowEven:     "FFF9F5",
+    totalsBg:    "FEF4EC",
+    grandBg:     "FCE8D5",
+  } as const;
 
-  function mergeAndSet(
-    startRow: number,
-    startCol: number,
-    endRow: number,
-    endCol: number,
-    value: string | number | null,
-    style: Partial<ExcelJS.Style> = {}
-  ) {
-    ws.mergeCells(startRow, startCol, endRow, endCol);
-    const cell = ws.getCell(startRow, startCol);
-    cell.value = value;
-    if (style.font) cell.font = style.font as ExcelJS.Font;
-    if (style.fill) cell.fill = style.fill as ExcelJS.Fill;
-    if (style.alignment) cell.alignment = style.alignment as ExcelJS.Alignment;
-    if (style.border) cell.border = style.border as ExcelJS.Borders;
-    return cell;
+  const NCOLS = 9;
+
+  // ── Low-level cell helpers ─────────────────────────────────────────────
+  function mc(r1: number, c1: number, r2: number, c2: number): ExcelJS.Cell {
+    if (r1 === r2 && c1 === c2) return ws.getCell(r1, c1);
+    ws.mergeCells(r1, c1, r2, c2);
+    return ws.getCell(r1, c1);
   }
 
-  let row = 1;
-
-  // ─── TITLE BLOCK ─────────────────────────────────────────────
-  mergeAndSet(row, 1, row, COLS, "ТОВАРНО-ТРАНСПОРТНАЯ НАКЛАДНАЯ (ТТН)", {
-    font: { name: "Calibri", bold: true, size: 16, color: { argb: `FF${brandColor}` } },
-    alignment: { horizontal: "center", vertical: "middle" },
-    fill: { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFFFFF" } },
-  });
-  ws.getRow(row).height = 32;
-  row++;
-
-  mergeAndSet(row, 1, row, COLS, "MIO BEAUTY  |  BUSINESS-PACKAGE LLC", {
-    font: { name: "Calibri", bold: true, size: 12, color: { argb: `FF${darkText}` } },
-    alignment: { horizontal: "center", vertical: "middle" },
-  });
-  ws.getRow(row).height = 22;
-  row++;
-
-  // Thin separator
-  const sepRow = ws.getRow(row);
-  for (let c = 1; c <= COLS; c++) {
-    ws.getCell(row, c).border = {
-      bottom: { style: "medium", color: { argb: `FF${brandColor}` } },
-    };
+  function setFill(cell: ExcelJS.Cell, hex: string) {
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: `FF${hex}` } };
   }
-  ws.getRow(row).height = 4;
-  row++;
-  row++; // blank
 
-  // ─── ORDER INFO BLOCK ─────────────────────────────────────────
-  const infoStyle: Partial<ExcelJS.Style> = {
-    font: { name: "Calibri", size: 11, color: { argb: `FF${darkText}` } },
-    fill: { type: "pattern", pattern: "solid", fgColor: { argb: `FF${headerBg}` } },
-  };
-  const labelStyle: Partial<ExcelJS.Style> = {
-    font: { name: "Calibri", bold: true, size: 11, color: { argb: `FF${mutedText}` } },
-    fill: { type: "pattern", pattern: "solid", fgColor: { argb: `FF${headerBg}` } },
-  };
+  function setFont(cell: ExcelJS.Cell, opts: Partial<ExcelJS.Font>) {
+    cell.font = { name: "Calibri", ...opts } as ExcelJS.Font;
+  }
 
-  const infoRows: [string, string][] = [
-    ["Дата отправки:", fmtDate(createdAt)],
-    ["Номер заказа:", orderNumber],
-    ["Покупатель:", customerName || "—"],
-    ["Телефон:", customerPhone || "—"],
-    ["Адрес доставки:", customerAddress || "—"],
-    ["Способ оплаты:", paymentLabel(paymentMethod)],
-    ["Менеджер:", managerName],
+  function setAlign(cell: ExcelJS.Cell, h: ExcelJS.Alignment["horizontal"], v: ExcelJS.Alignment["vertical"] = "middle", wrap = false) {
+    cell.alignment = { horizontal: h, vertical: v, wrapText: wrap };
+  }
+
+  function setBorder(cell: ExcelJS.Cell, style: BorderSide, hex: string) {
+    const b = { style, color: { argb: `FF${hex}` } } as ExcelJS.Border;
+    cell.border = { top: b, bottom: b, left: b, right: b };
+  }
+
+  function row(r: number) { return ws.getRow(r); }
+
+  // ── Cursor ────────────────────────────────────────────────────────────
+  let R = 1;
+
+  // ════════════════════════════════════════════════════════════════════════
+  //  ROW 1 — MAIN TITLE
+  // ════════════════════════════════════════════════════════════════════════
+  {
+    const c = mc(R, 1, R, NCOLS);
+    c.value = "ТОВАРНО-ТРАНСПОРТНАЯ НАКЛАДНАЯ (ТТН)";
+    setFont(c, { bold: true, size: 17, color: { argb: `FF${C.orange}` } });
+    setAlign(c, "center");
+    setFill(c, C.white);
+    row(R).height = 34;
+  }
+  R++;
+
+  // ════════════════════════════════════════════════════════════════════════
+  //  ROW 2 — COMPANY
+  // ════════════════════════════════════════════════════════════════════════
+  {
+    const c = mc(R, 1, R, NCOLS);
+    c.value = "MIO BEAUTY  |  BUSINESS-PACKAGE LLC";
+    setFont(c, { bold: true, size: 11, color: { argb: `FF${C.dark}` } });
+    setAlign(c, "center");
+    setFill(c, C.white);
+    row(R).height = 22;
+  }
+  R++;
+
+  // ════════════════════════════════════════════════════════════════════════
+  //  ROW 3 — ORANGE SEPARATOR
+  // ════════════════════════════════════════════════════════════════════════
+  for (let c = 1; c <= NCOLS; c++) {
+    const cell = ws.getCell(R, c);
+    setFill(cell, C.orange);
+    cell.value = "";
+  }
+  row(R).height = 4;
+  R++;
+
+  // Blank spacer
+  row(R).height = 6;
+  R++;
+
+  // ════════════════════════════════════════════════════════════════════════
+  //  ROWS 5-11 — ORDER INFO BLOCK (left side, cols 1-5)
+  // ════════════════════════════════════════════════════════════════════════
+  const infoStart = R;
+  const infoData: [string, string][] = [
+    ["Дата отправки:",   fmtDate(createdAt)],
+    ["Номер заказа:",    orderNumber],
+    ["Покупатель:",      customerName || "—"],
+    ["Телефон:",         customerPhone || "—"],
+    ["Адрес доставки:",  customerAddress || "—"],
+    ["Способ оплаты:",   paymentLabel(paymentMethod)],
+    ["Менеджер:",        managerName],
   ];
 
-  for (const [label, value] of infoRows) {
-    mergeAndSet(row, 1, row, 2, label, labelStyle);
-    mergeAndSet(row, 3, row, COLS, value, infoStyle);
-    ws.getRow(row).height = 20;
-    row++;
-  }
-  row++; // blank
+  for (const [label, value] of infoData) {
+    // Label cell (cols 1-2)
+    const lc = mc(R, 1, R, 2);
+    lc.value = label;
+    setFont(lc, { bold: true, size: 10, color: { argb: `FF${C.muted}` } });
+    setAlign(lc, "left");
+    setFill(lc, C.orangeLight);
 
-  // ─── TABLE HEADER ─────────────────────────────────────────────
-  const headerRow = ws.getRow(row);
-  headerRow.height = 24;
-  const headers = ["№", "Код (SKU)", "Наименование товара", "Кол-во", "Ед.", "Цена", "Скидка", "Цена со скидкой", "Сумма"];
+    // Value cell (cols 3-5)
+    const vc = mc(R, 3, R, 5);
+    vc.value = value;
+    setFont(vc, { size: 10, color: { argb: `FF${C.dark}` } });
+    setAlign(vc, "left");
+    setFill(vc, C.orangeLight);
+
+    // Right side filler (cols 6-9) — keep empty but same bg
+    const fc = mc(R, 6, R, NCOLS);
+    setFill(fc, C.white);
+
+    row(R).height = 19;
+    R++;
+  }
+  const infoEnd = R - 1;
+
+  // Box border around info block
+  applyBorderBox(ws, infoStart, 1, infoEnd, 5, "thin", C.orangeMid);
+
+  // Spacer
+  row(R).height = 8;
+  R++;
+
+  // ════════════════════════════════════════════════════════════════════════
+  //  TABLE HEADER
+  // ════════════════════════════════════════════════════════════════════════
+  const tableHeaderRow = R;
+  const headers = [
+    "№",
+    "Код (SKU)",
+    "Наименование товара",
+    "Кол-во",
+    "Ед.",
+    "Цена",
+    "Скидка",
+    "Цена со скидкой",
+    "Сумма",
+  ];
+
   headers.forEach((h, i) => {
-    const cell = ws.getCell(row, i + 1);
+    const cell = ws.getCell(R, i + 1);
     cell.value = h;
-    cell.font = { name: "Calibri", bold: true, size: 10, color: { argb: "FFFFFFFF" } };
-    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: `FF${brandColor}` } };
-    cell.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+    setFont(cell, { bold: true, size: 10, color: { argb: `FF${C.white}` } });
+    setFill(cell, C.orange);
+    cell.alignment = {
+      horizontal: i === 2 ? "left" : "center",
+      vertical: "middle",
+      wrapText: true,
+    };
     cell.border = {
-      top: { style: "thin", color: { argb: "FFFFFFFF" } },
-      bottom: { style: "thin", color: { argb: "FFFFFFFF" } },
-      left: { style: "thin", color: { argb: "FFFFFFFF" } },
-      right: { style: "thin", color: { argb: "FFFFFFFF" } },
+      top:    { style: "medium", color: { argb: `FF${C.orange}` } },
+      bottom: { style: "medium", color: { argb: `FF${C.orange}` } },
+      left:   { style: "thin",   color: { argb: `FFEEEEEE` } },
+      right:  { style: "thin",   color: { argb: `FFEEEEEE` } },
     };
   });
-  row++;
+  row(R).height = 28;
+  R++;
 
-  // ─── TABLE ROWS ───────────────────────────────────────────────
+  // ════════════════════════════════════════════════════════════════════════
+  //  PRODUCT ROWS
+  // ════════════════════════════════════════════════════════════════════════
   if (items.length === 0) {
-    mergeAndSet(row, 1, row, COLS, "Нет позиций в заказе", {
-      font: { name: "Calibri", size: 11, italic: true, color: { argb: `FF${mutedText}` } },
-      alignment: { horizontal: "center", vertical: "middle" },
-    });
-    ws.getRow(row).height = 22;
-    row++;
+    const c = mc(R, 1, R, NCOLS);
+    c.value = "Нет позиций в заказе";
+    setFont(c, { italic: true, size: 10, color: { argb: `FF${C.muted}` } });
+    setAlign(c, "center");
+    row(R).height = 22;
+    R++;
   }
+
+  const dataRowBorder = (cell: ExcelJS.Cell) => {
+    cell.border = {
+      top:    { style: "hair",  color: { argb: `FF${C.gridBorder}` } },
+      bottom: { style: "hair",  color: { argb: `FF${C.gridBorder}` } },
+      left:   { style: "thin",  color: { argb: `FF${C.gridBorder}` } },
+      right:  { style: "thin",  color: { argb: `FF${C.gridBorder}` } },
+    };
+  };
 
   for (const item of items) {
-    const isEven = item.num % 2 === 0;
-    const rowFill: ExcelJS.Fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: isEven ? `FF${tableBg}` : "FFFFFFFF" },
-    };
-    const border: Partial<ExcelJS.Borders> = {
-      bottom: { style: "hair", color: { argb: "FFEEEEEE" } },
-      left: { style: "hair", color: { argb: "FFEEEEEE" } },
-      right: { style: "hair", color: { argb: "FFEEEEEE" } },
-    };
-    const dataRow = ws.getRow(row);
-    dataRow.height = 20;
+    const bg = item.num % 2 === 0 ? C.rowEven : C.white;
+    row(R).height = 20;
 
-    const vals: (string | number)[] = [
-      item.num,
-      item.sku,
-      item.name,
-      item.qty,
-      "шт.",
-      item.unitPrice,
-      item.discount,
-      item.finalPrice,
-      item.total,
+    const rowVals: { v: string | number; align: ExcelJS.Alignment["horizontal"]; wrap?: boolean; numFmt?: string }[] = [
+      { v: item.num,        align: "center" },
+      { v: item.sku,        align: "center" },
+      { v: item.name,       align: "left",   wrap: true },
+      { v: item.qty,        align: "center" },
+      { v: "шт.",           align: "center" },
+      { v: item.unitPrice,  align: "right",  numFmt: '# ##0' },
+      { v: item.discount,   align: "right",  numFmt: '# ##0' },
+      { v: item.finalPrice, align: "right",  numFmt: '# ##0' },
+      { v: item.total,      align: "right",  numFmt: '# ##0' },
     ];
 
-    vals.forEach((v, i) => {
-      const cell = ws.getCell(row, i + 1);
+    rowVals.forEach(({ v, align, wrap, numFmt }, i) => {
+      const cell = ws.getCell(R, i + 1);
       cell.value = v;
-      cell.font = { name: "Calibri", size: 10, color: { argb: `FF${darkText}` } };
-      cell.fill = rowFill;
-      cell.border = border;
-      const isNumCol = [4, 6, 7, 8, 9].includes(i + 1);
-      if (isNumCol) {
-        cell.alignment = { horizontal: "right", vertical: "middle" };
-        if ([6, 7, 8, 9].includes(i + 1)) {
-          cell.numFmt = '#,##0" сум"';
-        }
-      } else {
-        cell.alignment = { horizontal: i === 2 ? "left" : "center", vertical: "middle", wrapText: i === 2 };
-      }
+      setFont(cell, { size: 10, color: { argb: `FF${C.dark}` } });
+      setFill(cell, bg);
+      cell.alignment = { horizontal: align, vertical: "middle", wrapText: !!wrap };
+      if (numFmt) cell.numFmt = numFmt;
+      dataRowBorder(cell);
     });
-    row++;
+    R++;
   }
 
-  row++; // blank
+  // Outer border around the entire table (header + data rows)
+  applyBorderBox(ws, tableHeaderRow, 1, R - 1, NCOLS, "medium", C.orange);
 
-  // ─── TOTALS BLOCK ─────────────────────────────────────────────
-  const totalFill: ExcelJS.Fill = {
-    type: "pattern",
-    pattern: "solid",
-    fgColor: { argb: `FF${headerBg}` },
-  };
+  // ════════════════════════════════════════════════════════════════════════
+  //  TOTALS BLOCK (right side, cols 6-9)
+  // ════════════════════════════════════════════════════════════════════════
+  row(R).height = 6;  // small spacer
+  R++;
 
-  const totalsData: [string, string][] = [
-    ["Итого позиций:", `${items.length} шт.`],
-    ["Итого количество:", `${totalQty} шт.`],
-    ["Подытог:", fmt(subtotal)],
-    ["Доставка:", fmt(deliveryPrice)],
-    ["НДС (0%):", "0 сум"],
-    ["ИТОГО К ОПЛАТЕ:", fmt(totalAmount)],
+  const totalsStart = R;
+  const totalsRows: { label: string; value: string; isGrand?: boolean }[] = [
+    { label: "Итого позиций:",   value: `${items.length} поз. / ${totalQty} шт.` },
+    { label: "Подытог:",         value: fmtMoney(subtotal) },
+    { label: "Доставка:",        value: fmtMoney(deliveryPrice) },
+    { label: "НДС (0%):",        value: "0 сум" },
+    { label: "ИТОГО К ОПЛАТЕ:",  value: fmtMoney(total), isGrand: true },
   ];
 
-  for (let i = 0; i < totalsData.length; i++) {
-    const [label, value] = totalsData[i];
-    const isLast = i === totalsData.length - 1;
-    mergeAndSet(row, 5, row, 7, label, {
-      font: { name: "Calibri", bold: isLast, size: isLast ? 12 : 10, color: { argb: `FF${isLast ? brandColor : mutedText}` } },
-      fill: totalFill,
-      alignment: { horizontal: "right", vertical: "middle" },
+  for (const { label, value, isGrand } of totalsRows) {
+    const lc = mc(R, 6, R, 7);
+    lc.value = label;
+    setFont(lc, {
+      bold: isGrand,
+      size: isGrand ? 12 : 10,
+      color: { argb: `FF${isGrand ? C.orange : C.muted}` },
     });
-    mergeAndSet(row, 8, row, COLS, value, {
-      font: { name: "Calibri", bold: isLast, size: isLast ? 12 : 10, color: { argb: `FF${isLast ? brandColor : darkText}` } },
-      fill: totalFill,
-      alignment: { horizontal: "right", vertical: "middle" },
+    setAlign(lc, "right");
+    setFill(lc, isGrand ? C.grandBg : C.totalsBg);
+
+    const vc = mc(R, 8, R, 9);
+    vc.value = value;
+    setFont(vc, {
+      bold: isGrand,
+      size: isGrand ? 12 : 10,
+      color: { argb: `FF${isGrand ? C.orange : C.dark}` },
     });
-    ws.getRow(row).height = isLast ? 26 : 20;
-    row++;
+    setAlign(vc, "right");
+    setFill(vc, isGrand ? C.grandBg : C.totalsBg);
+
+    if (isGrand) {
+      // Top border separator for grand total
+      for (const col of [6, 7, 8, 9]) {
+        ws.getCell(R, col).border = {
+          ...(ws.getCell(R, col).border ?? {}),
+          top: { style: "medium", color: { argb: `FF${C.orange}` } },
+        };
+      }
+    }
+
+    row(R).height = isGrand ? 26 : 20;
+    R++;
   }
 
-  row += 2; // spacer
+  // Box border around totals
+  applyBorderBox(ws, totalsStart, 6, R - 1, NCOLS, "thin", C.orangeMid);
 
-  // ─── SIGNATURES ───────────────────────────────────────────────
-  const sigLabel = {
-    font: { name: "Calibri", bold: true, size: 10, color: { argb: `FF${mutedText}` } },
-    alignment: { horizontal: "left" as const, vertical: "middle" as const },
+  // ════════════════════════════════════════════════════════════════════════
+  //  SIGNATURES
+  // ════════════════════════════════════════════════════════════════════════
+  row(R).height = 8;
+  R++;
+
+  // Row 1 of sigs: Продавец | (blank line) | (gap) | Получатель | (blank line)
+  const sigFontBase: Partial<ExcelJS.Font> = {
+    name: "Calibri",
+    size: 10,
+    color: { argb: `FF${C.muted}` },
+    bold: true,
   };
-  const sigLine = {
-    font: { name: "Calibri", size: 10, color: { argb: `FF${darkText}` } },
-    alignment: { horizontal: "left" as const, vertical: "middle" as const },
-    border: { bottom: { style: "thin" as const, color: { argb: `FF${darkText}` } } },
+  const sigLineBorder: Partial<ExcelJS.Borders> = {
+    bottom: { style: "thin", color: { argb: `FF${C.dark}` } },
   };
 
-  mergeAndSet(row, 1, row, 1, "Продавец:", sigLabel);
-  mergeAndSet(row, 2, row, 3, "", sigLine);
-  mergeAndSet(row, 5, row, 5, "Получатель:", sigLabel);
-  mergeAndSet(row, 6, row, 7, "", sigLine);
-  ws.getRow(row).height = 24;
-  row++;
+  // Sig row 1: Продавец + line (cols 1-4)   |   Получатель + line (cols 6-9)
+  {
+    const a = ws.getCell(R, 1);
+    a.value = "Продавец:";
+    setFont(a, sigFontBase);
+    setAlign(a, "left");
 
-  mergeAndSet(row, 1, row, 1, "Менеджер:", sigLabel);
-  mergeAndSet(row, 2, row, 3, "", sigLine);
-  mergeAndSet(row, 5, row, 5, "Дата:", sigLabel);
-  mergeAndSet(row, 6, row, 7, "", sigLine);
-  ws.getRow(row).height = 24;
-  row++;
+    const aLine = mc(R, 2, R, 4);
+    aLine.value = "";
+    aLine.border = sigLineBorder;
+    setFill(aLine, C.white);
 
-  row++;
-  mergeAndSet(row, 1, row, COLS, "MIO BEAUTY — Ваш надежный партнер в красоте  |  business-package.uz", {
-    font: { name: "Calibri", size: 9, italic: true, color: { argb: `FF${mutedText}` } },
-    alignment: { horizontal: "center", vertical: "middle" },
-  });
-  ws.getRow(row).height = 18;
+    const b = ws.getCell(R, 6);
+    b.value = "Получатель:";
+    setFont(b, sigFontBase);
+    setAlign(b, "left");
 
-  // ─── Build buffer ────────────────────────────────────────────
+    const bLine = mc(R, 7, R, NCOLS);
+    bLine.value = "";
+    bLine.border = sigLineBorder;
+    setFill(bLine, C.white);
+
+    row(R).height = 28;
+    R++;
+  }
+
+  // Sig row 2: Менеджер + line (cols 1-4)   |   Дата + line (cols 6-9)
+  {
+    const a = ws.getCell(R, 1);
+    a.value = "Менеджер:";
+    setFont(a, sigFontBase);
+    setAlign(a, "left");
+
+    const aLine = mc(R, 2, R, 4);
+    aLine.value = "";
+    aLine.border = sigLineBorder;
+    setFill(aLine, C.white);
+
+    const b = ws.getCell(R, 6);
+    b.value = "Дата:";
+    setFont(b, sigFontBase);
+    setAlign(b, "left");
+
+    const bLine = mc(R, 7, R, NCOLS);
+    bLine.value = "";
+    bLine.border = sigLineBorder;
+    setFill(bLine, C.white);
+
+    row(R).height = 28;
+    R++;
+  }
+
+  // ════════════════════════════════════════════════════════════════════════
+  //  FOOTER
+  // ════════════════════════════════════════════════════════════════════════
+  row(R).height = 6;
+  R++;
+
+  {
+    const c = mc(R, 1, R, NCOLS);
+    c.value = "MIO BEAUTY — ваш надёжный партнёр в красоте  |  business-package.uz";
+    setFont(c, { italic: true, size: 9, color: { argb: `FF${C.muted}` } });
+    setAlign(c, "center");
+    row(R).height = 16;
+  }
+
+  // ─── Output ─────────────────────────────────────────────────────────────
   const buffer = await wb.xlsx.writeBuffer();
-  const safeOrderNumber = orderNumber.replace(/[^a-zA-Z0-9_-]/g, "-");
+  const safeName = orderNumber.replace(/[^a-zA-Z0-9_-]/g, "-");
 
   return new NextResponse(Buffer.from(buffer), {
     headers: {
-      "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "Content-Disposition": `attachment; filename="TTN-${safeOrderNumber}.xlsx"`,
+      "Content-Type":
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "Content-Disposition": `attachment; filename="TTN-${safeName}.xlsx"`,
       "Cache-Control": "no-store",
     },
   });

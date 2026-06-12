@@ -22,7 +22,9 @@ export type TtnItemData = {
 function fmt(n: number) {
   return `${n.toLocaleString("ru-RU")} сум`;
 }
-
+function fmtNum(n: number) {
+  return n.toLocaleString("ru-RU");
+}
 function fmtDate(iso: string) {
   try {
     return new Date(iso).toLocaleDateString("ru-RU", {
@@ -34,7 +36,6 @@ function fmtDate(iso: string) {
     return iso;
   }
 }
-
 function paymentLabel(method: string) {
   const map: Record<string, string> = {
     cash: "Наличные",
@@ -45,7 +46,6 @@ function paymentLabel(method: string) {
   };
   return map[method] ?? method ?? "—";
 }
-
 function esc(s: string) {
   return s
     .replace(/&/g, "&amp;")
@@ -65,20 +65,20 @@ export function buildTtnHtml(
     ? items
         .map(
           (item) => `
-        <tr>
+        <tr class="${item.num % 2 === 0 ? "even" : "odd"}">
           <td class="center">${item.num}</td>
-          <td class="center">${esc(item.sku)}</td>
-          <td>${esc(item.name)}</td>
+          <td class="center mono">${esc(item.sku)}</td>
+          <td class="left name">${esc(item.name)}</td>
           <td class="center">${item.qty}</td>
           <td class="center">шт.</td>
-          <td class="right">${fmt(item.unitPrice)}</td>
+          <td class="right">${fmtNum(item.unitPrice)}</td>
           <td class="center">—</td>
-          <td class="right">${fmt(item.unitPrice)}</td>
-          <td class="right bold">${fmt(item.total)}</td>
+          <td class="right">${fmtNum(item.unitPrice)}</td>
+          <td class="right bold">${fmtNum(item.total)}</td>
         </tr>`
         )
         .join("")
-    : `<tr><td colspan="9" class="center muted">Нет позиций в заказе</td></tr>`;
+    : `<tr><td colspan="9" class="center muted no-items">Нет позиций в заказе</td></tr>`;
 
   return `<!DOCTYPE html>
 <html lang="ru">
@@ -86,88 +86,149 @@ export function buildTtnHtml(
 <meta charset="UTF-8">
 <title>ТТН ${esc(order.orderNumber)}</title>
 <style>
-  @page { size: A4 landscape; margin: 14mm 12mm; }
+  @page { size: A4 landscape; margin: 12mm 14mm; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: "Arial", sans-serif; font-size: 10pt; color: #1a1a1a; background: #fff; }
+  body { font-family: "Calibri", "Arial", sans-serif; font-size: 10pt; color: #1a1a1a; background: #fff; }
+  .page { max-width: 267mm; margin: 0 auto; }
 
-  .page { max-width: 270mm; margin: 0 auto; }
+  /* ── Title block ── */
+  .title-block { text-align: center; margin-bottom: 0; }
+  .ttn-title {
+    font-size: 16pt; font-weight: 800; color: #D97030;
+    letter-spacing: 0.02em; line-height: 1.3; margin-bottom: 4pt;
+  }
+  .ttn-company {
+    font-size: 11pt; font-weight: 600; color: #1a1a1a;
+    margin-bottom: 6pt;
+  }
+  .ttn-divider {
+    height: 4pt; background: #D97030; border: none; margin-bottom: 8pt;
+  }
 
-  /* Header */
-  .ttn-title { text-align: center; font-size: 16pt; font-weight: 700; color: #c8523a; margin-bottom: 3pt; letter-spacing: 0.02em; }
-  .ttn-company { text-align: center; font-size: 11pt; font-weight: 600; color: #1a1a1a; margin-bottom: 6pt; }
-  .ttn-divider { border: none; border-top: 2.5pt solid #c8523a; margin-bottom: 10pt; }
+  /* ── Info block ── */
+  .info-block {
+    border: 1.5pt solid #F5CCA8;
+    border-radius: 3pt;
+    background: #FCF0E8;
+    padding: 0;
+    margin-bottom: 10pt;
+    display: inline-block;
+    min-width: 260pt;
+  }
+  .info-table { border-collapse: collapse; width: 100%; }
+  .info-table td {
+    padding: 4pt 8pt;
+    font-size: 9.5pt;
+    line-height: 1.4;
+    border-bottom: 0.5pt solid #F5CCA8;
+  }
+  .info-table tr:last-child td { border-bottom: none; }
+  .info-table .lbl { font-weight: 700; color: #777; width: 110pt; }
+  .info-table .val { color: #1a1a1a; }
 
-  /* Info grid */
-  .info-grid { display: grid; grid-template-columns: 130pt 1fr; row-gap: 3pt; background: #fff5f2; padding: 8pt 10pt; border-radius: 4pt; margin-bottom: 12pt; }
-  .info-label { font-weight: 700; color: #666; font-size: 9.5pt; }
-  .info-value { color: #1a1a1a; font-size: 9.5pt; }
+  /* ── Product table ── */
+  .product-table { width: 100%; border-collapse: collapse; font-size: 9pt; margin-bottom: 6pt; }
+  .product-table thead tr {
+    background: #D97030; color: #fff;
+  }
+  .product-table thead th {
+    padding: 6pt 4pt; font-weight: 700; font-size: 9pt;
+    border: 1pt solid #c45f20;
+  }
+  .product-table thead th.left { text-align: left; }
+  .product-table thead th.center { text-align: center; }
+  .product-table thead th.right { text-align: right; }
+  .product-table tbody td {
+    padding: 4pt 4pt;
+    border: 0.75pt solid #dddddd;
+    vertical-align: middle;
+    font-size: 9pt;
+  }
+  .product-table tbody tr.even td { background: #FFF9F5; }
+  .product-table tbody tr.odd  td { background: #ffffff; }
+  .product-table .center { text-align: center; }
+  .product-table .right  { text-align: right; }
+  .product-table .left   { text-align: left; }
+  .product-table .name   { text-align: left; }
+  .product-table .mono   { font-family: "Courier New", monospace; font-size: 8.5pt; }
+  .product-table .bold   { font-weight: 700; }
+  .product-table .muted  { color: #999; }
+  .product-table .no-items { padding: 10pt; font-style: italic; }
+  /* outer border around entire table */
+  .product-table { border: 2pt solid #D97030; }
 
-  /* Table */
-  table { width: 100%; border-collapse: collapse; font-size: 9pt; margin-bottom: 10pt; }
-  thead tr { background: #c8523a; color: #fff; }
-  thead th { padding: 5pt 4pt; text-align: center; font-weight: 700; font-size: 8.5pt; border: 1pt solid #b04030; }
-  tbody tr:nth-child(even) { background: #fff8f6; }
-  tbody tr:nth-child(odd) { background: #ffffff; }
-  tbody td { padding: 4pt; border: 0.5pt solid #eeeeee; font-size: 9pt; vertical-align: middle; }
-  .th-name { text-align: left !important; }
-  .td-name { text-align: left; }
-  .center { text-align: center; }
-  .right { text-align: right; }
-  .bold { font-weight: 700; }
-  .muted { color: #999; font-style: italic; }
+  /* ── Totals block ── */
+  .totals-wrap { display: flex; justify-content: flex-end; margin-bottom: 12pt; }
+  .totals-box {
+    border: 1.5pt solid #F5CCA8;
+    border-radius: 3pt;
+    overflow: hidden;
+    min-width: 220pt;
+  }
+  .totals-table { border-collapse: collapse; width: 100%; }
+  .totals-table td { padding: 4pt 8pt; font-size: 9.5pt; }
+  .totals-table td:first-child { background: #FEF4EC; color: #777; text-align: right; font-weight: 600; border-right: 0.5pt solid #F5CCA8; }
+  .totals-table td:last-child  { background: #FEF4EC; color: #1a1a1a; text-align: right; min-width: 90pt; }
+  .totals-table tr { border-bottom: 0.5pt solid #F5CCA8; }
+  .totals-table tr:last-child { border-bottom: none; }
+  .totals-table tr.grand td:first-child {
+    background: #FCE8D5; color: #D97030; font-size: 11pt; font-weight: 800;
+    border-top: 1.5pt solid #D97030;
+  }
+  .totals-table tr.grand td:last-child {
+    background: #FCE8D5; color: #D97030; font-size: 11pt; font-weight: 800;
+    border-top: 1.5pt solid #D97030;
+  }
 
-  /* Totals */
-  .totals-block { display: flex; justify-content: flex-end; margin-bottom: 14pt; }
-  .totals-table { width: 220pt; font-size: 9.5pt; border-collapse: collapse; }
-  .totals-table td { padding: 3pt 6pt; }
-  .totals-table td:first-child { color: #666; text-align: right; }
-  .totals-table td:last-child { text-align: right; font-weight: 600; color: #1a1a1a; }
-  .totals-table tr.grand td { border-top: 1.5pt solid #c8523a; padding-top: 5pt; font-size: 11pt; font-weight: 700; color: #c8523a; }
+  /* ── Signatures ── */
+  .sigs { display: grid; grid-template-columns: 1fr 1fr; column-gap: 20pt; row-gap: 10pt; margin-bottom: 10pt; }
+  .sig-row { display: flex; align-items: flex-end; gap: 6pt; }
+  .sig-lbl { font-size: 9.5pt; font-weight: 700; color: #777; white-space: nowrap; }
+  .sig-line { flex: 1; border-bottom: 1pt solid #1a1a1a; min-width: 80pt; height: 18pt; }
 
-  /* Signatures */
-  .sigs { display: grid; grid-template-columns: 1fr 1fr; gap: 10pt; margin-bottom: 12pt; }
-  .sig-row { display: flex; align-items: flex-end; gap: 8pt; font-size: 9.5pt; }
-  .sig-label { font-weight: 700; color: #666; white-space: nowrap; }
-  .sig-line { flex: 1; border-bottom: 1pt solid #1a1a1a; min-width: 60pt; height: 16pt; }
-
-  /* Footer */
-  .footer { text-align: center; font-size: 8.5pt; color: #999; font-style: italic; }
+  /* ── Footer ── */
+  .footer { text-align: center; font-size: 8.5pt; color: #aaa; font-style: italic; }
 
   @media print {
     body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .page { max-width: none; }
+    .product-table tbody tr { page-break-inside: avoid; }
   }
 </style>
 </head>
 <body>
 <div class="page">
 
-  <div class="ttn-title">ТОВАРНО-ТРАНСПОРТНАЯ НАКЛАДНАЯ (ТТН)</div>
-  <div class="ttn-company">MIO BEAUTY &nbsp;|&nbsp; BUSINESS-PACKAGE LLC</div>
-  <hr class="ttn-divider">
+  <div class="title-block">
+    <div class="ttn-title">ТОВАРНО-ТРАНСПОРТНАЯ НАКЛАДНАЯ (ТТН)</div>
+    <div class="ttn-company">MIO BEAUTY &nbsp;|&nbsp; BUSINESS-PACKAGE LLC</div>
+  </div>
+  <div class="ttn-divider"></div>
 
-  <div class="info-grid">
-    <span class="info-label">Дата отправки:</span><span class="info-value">${fmtDate(order.createdAt)}</span>
-    <span class="info-label">Номер заказа:</span><span class="info-value">${esc(order.orderNumber)}</span>
-    <span class="info-label">Покупатель:</span><span class="info-value">${esc(order.customerName || "—")}</span>
-    <span class="info-label">Телефон:</span><span class="info-value">${esc(order.phone || "—")}</span>
-    <span class="info-label">Адрес доставки:</span><span class="info-value">${esc(order.address || "—")}</span>
-    <span class="info-label">Способ оплаты:</span><span class="info-value">${esc(paymentLabel(order.paymentMethod))}</span>
-    <span class="info-label">Менеджер:</span><span class="info-value">${esc(managerName)}</span>
+  <div class="info-block">
+    <table class="info-table">
+      <tr><td class="lbl">Дата отправки:</td><td class="val">${fmtDate(order.createdAt)}</td></tr>
+      <tr><td class="lbl">Номер заказа:</td><td class="val">${esc(order.orderNumber)}</td></tr>
+      <tr><td class="lbl">Покупатель:</td><td class="val">${esc(order.customerName || "—")}</td></tr>
+      <tr><td class="lbl">Телефон:</td><td class="val">${esc(order.phone || "—")}</td></tr>
+      <tr><td class="lbl">Адрес доставки:</td><td class="val">${esc(order.address || "—")}</td></tr>
+      <tr><td class="lbl">Способ оплаты:</td><td class="val">${esc(paymentLabel(order.paymentMethod))}</td></tr>
+      <tr><td class="lbl">Менеджер:</td><td class="val">${esc(managerName)}</td></tr>
+    </table>
   </div>
 
-  <table>
+  <table class="product-table">
     <thead>
       <tr>
-        <th style="width:28pt">№</th>
-        <th style="width:68pt">Код (SKU)</th>
-        <th class="th-name">Наименование товара</th>
-        <th style="width:34pt">Кол-во</th>
-        <th style="width:28pt">Ед.</th>
-        <th style="width:72pt">Цена</th>
-        <th style="width:46pt">Скидка</th>
-        <th style="width:72pt">Цена со скидкой</th>
-        <th style="width:76pt">Сумма</th>
+        <th class="center" style="width:26pt">№</th>
+        <th class="center" style="width:64pt">Код (SKU)</th>
+        <th class="left">Наименование товара</th>
+        <th class="center" style="width:32pt">Кол-во</th>
+        <th class="center" style="width:26pt">Ед.</th>
+        <th class="right"  style="width:64pt">Цена</th>
+        <th class="center" style="width:42pt">Скидка</th>
+        <th class="right"  style="width:64pt">Цена со скидкой</th>
+        <th class="right"  style="width:70pt">Сумма</th>
       </tr>
     </thead>
     <tbody>
@@ -175,33 +236,26 @@ export function buildTtnHtml(
     </tbody>
   </table>
 
-  <div class="totals-block">
-    <table class="totals-table">
-      <tr><td>Итого позиций:</td><td>${items.length} поз.</td></tr>
-      <tr><td>Итого количество:</td><td>${totalQty} шт.</td></tr>
-      <tr><td>Подытог:</td><td>${fmt(order.subtotal)}</td></tr>
-      <tr><td>Доставка:</td><td>${fmt(order.deliveryPrice)}</td></tr>
-      <tr><td>НДС (0%):</td><td>0 сум</td></tr>
-      <tr class="grand"><td>ИТОГО К ОПЛАТЕ:</td><td>${fmt(order.total)}</td></tr>
-    </table>
+  <div class="totals-wrap">
+    <div class="totals-box">
+      <table class="totals-table">
+        <tr><td>Итого позиций:</td><td>${items.length} поз. / ${totalQty} шт.</td></tr>
+        <tr><td>Подытог:</td><td>${fmt(order.subtotal)}</td></tr>
+        <tr><td>Доставка:</td><td>${fmt(order.deliveryPrice)}</td></tr>
+        <tr><td>НДС (0%):</td><td>0 сум</td></tr>
+        <tr class="grand"><td>ИТОГО К ОПЛАТЕ:</td><td>${fmt(order.total)}</td></tr>
+      </table>
+    </div>
   </div>
 
   <div class="sigs">
-    <div>
-      <div class="sig-row"><span class="sig-label">Продавец:</span><span class="sig-line"></span></div>
-    </div>
-    <div>
-      <div class="sig-row"><span class="sig-label">Получатель:</span><span class="sig-line"></span></div>
-    </div>
-    <div>
-      <div class="sig-row"><span class="sig-label">Менеджер:</span><span class="sig-line"></span></div>
-    </div>
-    <div>
-      <div class="sig-row"><span class="sig-label">Дата:</span><span class="sig-line"></span></div>
-    </div>
+    <div class="sig-row"><span class="sig-lbl">Продавец:</span><span class="sig-line"></span></div>
+    <div class="sig-row"><span class="sig-lbl">Получатель:</span><span class="sig-line"></span></div>
+    <div class="sig-row"><span class="sig-lbl">Менеджер:</span><span class="sig-line"></span></div>
+    <div class="sig-row"><span class="sig-lbl">Дата:</span><span class="sig-line"></span></div>
   </div>
 
-  <div class="footer">MIO BEAUTY — Ваш надёжный партнёр в красоте &nbsp;|&nbsp; business-package.uz</div>
+  <div class="footer">MIO BEAUTY — ваш надёжный партнёр в красоте &nbsp;|&nbsp; business-package.uz</div>
 
 </div>
 </body>
@@ -214,7 +268,7 @@ export function printTtnDocument(
   managerName: string
 ) {
   const html = buildTtnHtml(order, items, managerName);
-  const win = window.open("", "_blank", "width=1100,height=750,scrollbars=yes");
+  const win = window.open("", "_blank", "width=1150,height=800,scrollbars=yes");
   if (!win) {
     alert("Пожалуйста, разрешите всплывающие окна для этой страницы.");
     return;
@@ -222,9 +276,8 @@ export function printTtnDocument(
   win.document.open();
   win.document.write(html);
   win.document.close();
-  // Small delay to let CSS render before print dialog
   win.setTimeout(() => {
     win.focus();
     win.print();
-  }, 400);
+  }, 450);
 }
