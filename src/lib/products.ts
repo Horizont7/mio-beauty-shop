@@ -77,11 +77,82 @@ type ProductImageRow = {
 
 const productDetailSelect =
   "id,slug,name_ru,name_uz,description_ru,description_uz,seo_title_ru,seo_title_uz,seo_description_ru,seo_description_uz,brand,image,price,old_price,category_id,stock,sku,barcode,weight,volume,usage_ru,usage_uz,ingredients_ru,ingredients_uz,is_new,is_hit,active";
+const legacyProductDetailSelect =
+  "id,slug,name_ru,name_uz,description_ru,description_uz,seo_title_ru,seo_title_uz,seo_description_ru,seo_description_uz,brand,image,price,old_price,category_id,stock,sku,barcode,weight,volume,is_new,is_hit,active";
+
+export function getProductPathSegment(
+  product: Pick<CatalogProduct, "id" | "slug" | "sku">
+) {
+  return encodeURIComponent(String(product.sku || product.slug || product.id));
+}
 
 function uniqueImages(images: Array<string | null | undefined>) {
   return Array.from(
-    new Set(images.filter((image): image is string => Boolean(image)))
+    new Set(
+      images.filter(
+        (image): image is string => {
+          if (!image) return false;
+
+          return (
+            image.startsWith("https://") ||
+            image.startsWith("http://") ||
+            image.startsWith("/")
+          );
+        }
+      )
+    )
   );
+}
+
+function withProductDetailFallback(product: Record<string, unknown>) {
+  return {
+    usage_ru: null,
+    usage_uz: null,
+    ingredients_ru: null,
+    ingredients_uz: null,
+    ...product,
+  } as ProductDetail;
+}
+
+function isMissingOptionalProductColumn(error: { message?: string } | null) {
+  const message = error?.message || "";
+
+  return (
+    message.includes("usage_ru") ||
+    message.includes("usage_uz") ||
+    message.includes("ingredients_ru") ||
+    message.includes("ingredients_uz")
+  );
+}
+
+async function findActiveProductByField(field: "slug" | "sku" | "id", value: string | number) {
+  const result = await supabase
+    .from("products")
+    .select(productDetailSelect)
+    .eq(field, value)
+    .eq("active", true)
+    .maybeSingle();
+
+  if (!result.error) {
+    return result.data ? withProductDetailFallback(result.data) : null;
+  }
+
+  if (!isMissingOptionalProductColumn(result.error)) {
+    throw result.error;
+  }
+
+  const fallback = await supabase
+    .from("products")
+    .select(legacyProductDetailSelect)
+    .eq(field, value)
+    .eq("active", true)
+    .maybeSingle();
+
+  if (fallback.error) {
+    throw fallback.error;
+  }
+
+  return fallback.data ? withProductDetailFallback(fallback.data) : null;
 }
 
 export async function getActiveProductsByCategoryId(categoryId: number) {
@@ -102,38 +173,43 @@ export async function getActiveProductsByCategoryId(categoryId: number) {
 }
 
 export async function getActiveProductBySlug(slug: string) {
-  const { data, error } = await supabase
-    .from("products")
-    .select(productDetailSelect)
-    .eq("slug", slug)
-    .eq("active", true)
-    .maybeSingle();
+  const param = decodeURIComponent(slug).trim();
 
-  if (error) {
-    throw new Error(error.message);
+  for (const query of [
+    { field: "slug", value: param },
+    { field: "sku", value: param },
+  ] as const) {
+    try {
+      const product = await findActiveProductByField(query.field, query.value);
+
+      if (product) {
+        return product;
+      }
+    } catch (error) {
+      console.error("PRODUCT_PAGE_ERROR", {
+        param,
+        query: `products.${query.field}`,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      continue;
+    }
   }
 
-  if (data) {
-    return data as ProductDetail;
-  }
-
-  const id = Number.parseInt(slug, 10);
+  const id = Number.parseInt(param, 10);
   if (Number.isNaN(id)) {
     return null;
   }
 
-  const fallback = await supabase
-    .from("products")
-    .select(productDetailSelect)
-    .eq("id", id)
-    .eq("active", true)
-    .maybeSingle();
-
-  if (fallback.error) {
-    throw new Error(fallback.error.message);
+  try {
+    return await findActiveProductByField("id", id);
+  } catch (error) {
+    console.error("PRODUCT_PAGE_ERROR", {
+      param,
+      query: "products.id",
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return null;
   }
-
-  return fallback.data as ProductDetail | null;
 }
 
 export async function getProductImages(product: ProductDetail | null) {
@@ -145,6 +221,11 @@ export async function getProductImages(product: ProductDetail | null) {
     .eq("product_id", product.id);
 
   if (error) {
+    console.error("PRODUCT_PAGE_ERROR", {
+      param: product.id,
+      query: "product_images.product_id",
+      error: error.message,
+    });
     return uniqueImages([product.image]);
   }
 
@@ -173,7 +254,12 @@ export async function getRelatedProducts(
     .limit(4);
 
   if (error) {
-    throw new Error(error.message);
+    console.error("PRODUCT_PAGE_ERROR", {
+      param: productId,
+      query: "related_products",
+      error: error.message,
+    });
+    return [];
   }
 
   return (data || []) as CatalogProduct[];
@@ -228,7 +314,12 @@ export async function getActiveReviewsByProductId(productId: number) {
 
   if (error) {
     if (error.message.includes("reviews")) return [];
-    throw new Error(error.message);
+    console.error("PRODUCT_PAGE_ERROR", {
+      param: productId,
+      query: "reviews.product_id",
+      error: error.message,
+    });
+    return [];
   }
 
   return (data || []) as ProductReview[];

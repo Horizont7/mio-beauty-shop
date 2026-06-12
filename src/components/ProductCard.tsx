@@ -7,7 +7,7 @@ import { BrandTheme, getBrandTheme } from "@/lib/brand";
 import { useCommerce } from "@/lib/commerce";
 import { useLanguage } from "@/lib/language";
 import { getLocalizedProduct } from "@/lib/localized-data";
-import { CatalogProduct } from "@/lib/products";
+import { CatalogProduct, getProductPathSegment } from "@/lib/products";
 
 type ProductCardProps = {
   product: CatalogProduct;
@@ -67,7 +67,7 @@ export default function ProductCard({
 
   return (
     <Link
-      href={`/product/${product.slug || product.id}`}
+      href={`/product/${getProductPathSegment(product)}`}
       className="group block overflow-hidden rounded-[20px] border border-white/80 bg-white/90 shadow-[0_20px_60px_rgba(112,72,61,0.1)] backdrop-blur transition duration-500 hover:-translate-y-1.5 hover:shadow-[0_30px_90px_rgba(112,72,61,0.18)] sm:rounded-[24px]"
     >
       <div

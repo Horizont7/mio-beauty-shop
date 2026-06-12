@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
     const csp = [
       "default-src 'self'",
       `connect-src 'self' ${supabaseOrigin} https://*.supabase.co wss://*.supabase.co https://*.vercel.app https://www.miobeauty.shop https://miobeauty.shop`,
-      `img-src 'self' data: blob: ${supabaseOrigin} https://*.supabase.co`,
+      `img-src 'self' data: blob: ${supabaseOrigin} https://*.supabase.co https://*.vercel.app`,
       `media-src 'self' blob: ${supabaseOrigin} https://*.supabase.co`,
       "font-src 'self' data:",
       "style-src 'self' 'unsafe-inline'",
