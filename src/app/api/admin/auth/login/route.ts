@@ -85,13 +85,6 @@ export async function POST(request: NextRequest) {
     path: "/",
     maxAge: adminSessionMaxAgeSeconds(),
   });
-  response.cookies.set(adminSessionCookie, "", {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/admin",
-    maxAge: 0,
-  });
 
   await supabase.from("security_audit_logs").insert({
     event_type: "admin_login",

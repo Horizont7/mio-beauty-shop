@@ -3,7 +3,7 @@ import { getProductPathSegment } from "@/lib/products";
 import { supabase } from "@/lib/supabase";
 
 const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://mio-beauty-shop.vercel.app";
+  process.env.NEXT_PUBLIC_SITE_URL || "https://miobeauty.shop";
 
 function route(url: string): MetadataRoute.Sitemap[number] {
   return {

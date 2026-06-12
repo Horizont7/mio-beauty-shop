@@ -21,13 +21,6 @@ export async function POST(request: NextRequest) {
     path: "/",
     maxAge: 0,
   });
-  response.cookies.set(adminSessionCookie, "", {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/admin",
-    maxAge: 0,
-  });
 
   if (session) {
     const supabase = createSupabaseAdminClient();
