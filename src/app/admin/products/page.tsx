@@ -238,6 +238,22 @@ function normalizeLookupValue(value: string | null | undefined) {
   return (value || "").trim().toLowerCase();
 }
 
+function isMissingUsageIngredients(error: { message?: string } | null | undefined) {
+  const message = error?.message || "";
+  return (
+    message.includes("usage_ru") ||
+    message.includes("usage_uz") ||
+    message.includes("ingredients_ru") ||
+    message.includes("ingredients_uz")
+  );
+}
+
+const productFullSelect =
+  "id,slug,name_ru,name_uz,brand,image,price,old_price,category_id,description_ru,description_uz,usage_ru,usage_uz,ingredients_ru,ingredients_uz,stock,sku,barcode,weight,volume,sort_order,seo_title_ru,seo_title_uz,seo_description_ru,seo_description_uz,is_new,is_hit,active";
+
+const productLimitedSelect =
+  "id,slug,name_ru,name_uz,brand,image,price,old_price,category_id,description_ru,description_uz,stock,sku,barcode,weight,volume,sort_order,seo_title_ru,seo_title_uz,seo_description_ru,seo_description_uz,is_new,is_hit,active";
+
 function generateSlug(value: string) {
   const fallback = `product-${Date.now()}`;
   const slug = value
@@ -363,6 +379,7 @@ export default function ProductsPage() {
   const [badgeFilter, setBadgeFilter] = useState("all");
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const importInputRef = useRef<HTMLInputElement | null>(null);
+  const [hasUsageIngredients, setHasUsageIngredients] = useState(true);
 
   useEffect(() => {
     loadPageData();
@@ -371,12 +388,10 @@ export default function ProductsPage() {
   async function loadPageData() {
     setPageLoading(true);
 
-    const [productsResult, categoriesResult] = await Promise.all([
-        supabase
-          .from("products")
-          .select(
-            "id,slug,name_ru,name_uz,brand,image,price,old_price,category_id,description_ru,description_uz,usage_ru,usage_uz,ingredients_ru,ingredients_uz,stock,sku,barcode,weight,volume,sort_order,seo_title_ru,seo_title_uz,seo_description_ru,seo_description_uz,is_new,is_hit,active"
-          )
+    const [rawProductsResult, categoriesResult] = await Promise.all([
+      supabase
+        .from("products")
+        .select(productFullSelect)
         .order("sort_order", { ascending: true, nullsFirst: false })
         .order("id", { ascending: false }),
       supabase
@@ -386,9 +401,23 @@ export default function ProductsPage() {
         .order("sort_order", { ascending: true, nullsFirst: false }),
     ]);
 
-    if (productsResult.error) {
-      console.error(productsResult.error);
-      alert(productsResult.error.message);
+    let finalProductsResult: typeof rawProductsResult = rawProductsResult;
+
+    if (rawProductsResult.error && isMissingUsageIngredients(rawProductsResult.error)) {
+      setHasUsageIngredients(false);
+      const fallback = await supabase
+        .from("products")
+        .select(productLimitedSelect)
+        .order("sort_order", { ascending: true, nullsFirst: false })
+        .order("id", { ascending: false });
+      finalProductsResult = fallback as typeof rawProductsResult;
+    } else {
+      setHasUsageIngredients(true);
+    }
+
+    if (finalProductsResult.error) {
+      console.error(finalProductsResult.error);
+      alert(finalProductsResult.error.message);
       setPageLoading(false);
       return;
     }
@@ -400,7 +429,7 @@ export default function ProductsPage() {
       return;
     }
 
-    setProducts((productsResult.data || []) as Product[]);
+    setProducts((finalProductsResult.data || []) as Product[]);
     setCategories((categoriesResult.data || []) as Category[]);
     setPageLoading(false);
   }
@@ -532,10 +561,12 @@ export default function ProductsPage() {
         category_id: Number.isNaN(categoryId) ? null : categoryId,
         description_ru: form.descriptionRu.trim() || null,
         description_uz: form.descriptionUz.trim() || null,
-        usage_ru: form.usageRu.trim() || null,
-        usage_uz: form.usageUz.trim() || null,
-        ingredients_ru: form.ingredientsRu.trim() || null,
-        ingredients_uz: form.ingredientsUz.trim() || null,
+        ...(hasUsageIngredients ? {
+          usage_ru: form.usageRu.trim() || null,
+          usage_uz: form.usageUz.trim() || null,
+          ingredients_ru: form.ingredientsRu.trim() || null,
+          ingredients_uz: form.ingredientsUz.trim() || null,
+        } : {}),
         stock: parseInteger(form.stock),
         sku: form.sku.trim() || null,
         barcode: form.barcode.trim() || null,
