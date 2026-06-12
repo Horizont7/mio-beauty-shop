@@ -380,6 +380,8 @@ export default function ProductsPage() {
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const importInputRef = useRef<HTMLInputElement | null>(null);
   const [hasUsageIngredients, setHasUsageIngredients] = useState(true);
+  const [repairingSchema, setRepairingSchema] = useState(false);
+  const [schemaRepairSql, setSchemaRepairSql] = useState<string | null>(null);
 
   useEffect(() => {
     loadPageData();
@@ -411,13 +413,14 @@ export default function ProductsPage() {
         .order("sort_order", { ascending: true, nullsFirst: false })
         .order("id", { ascending: false });
       finalProductsResult = fallback as typeof rawProductsResult;
+      void repairSchema();
     } else {
       setHasUsageIngredients(true);
     }
 
     if (finalProductsResult.error) {
       console.error(finalProductsResult.error);
-      alert(finalProductsResult.error.message);
+      showToast("error", finalProductsResult.error.message);
       setPageLoading(false);
       return;
     }
@@ -432,6 +435,38 @@ export default function ProductsPage() {
     setProducts((finalProductsResult.data || []) as Product[]);
     setCategories((categoriesResult.data || []) as Category[]);
     setPageLoading(false);
+  }
+
+  async function repairSchema() {
+    setRepairingSchema(true);
+    setSchemaRepairSql(null);
+    try {
+      const resp = await fetch("/api/admin/apply-schema", { method: "POST" });
+      if (!resp.ok) {
+        setSchemaRepairSql(
+          "ALTER TABLE public.products ADD COLUMN IF NOT EXISTS usage_ru text;\n" +
+          "ALTER TABLE public.products ADD COLUMN IF NOT EXISTS usage_uz text;\n" +
+          "ALTER TABLE public.products ADD COLUMN IF NOT EXISTS ingredients_ru text;\n" +
+          "ALTER TABLE public.products ADD COLUMN IF NOT EXISTS ingredients_uz text;"
+        );
+        return;
+      }
+      const data = (await resp.json()) as { success: boolean; sql?: string };
+      if (data.success) {
+        window.location.reload();
+      } else {
+        setSchemaRepairSql(data.sql ?? null);
+      }
+    } catch {
+      setSchemaRepairSql(
+        "ALTER TABLE public.products ADD COLUMN IF NOT EXISTS usage_ru text;\n" +
+        "ALTER TABLE public.products ADD COLUMN IF NOT EXISTS usage_uz text;\n" +
+        "ALTER TABLE public.products ADD COLUMN IF NOT EXISTS ingredients_ru text;\n" +
+        "ALTER TABLE public.products ADD COLUMN IF NOT EXISTS ingredients_uz text;"
+      );
+    } finally {
+      setRepairingSchema(false);
+    }
   }
 
   function updateForm(
@@ -1212,6 +1247,52 @@ export default function ProductsPage() {
           }`}
         >
           {toast.text}
+        </div>
+      )}
+
+      {repairingSchema && (
+        <div className="rounded-2xl border border-blue-200 bg-blue-50 px-5 py-3 text-sm text-blue-700">
+          Applying schema repair automatically…
+        </div>
+      )}
+
+      {schemaRepairSql && !repairingSchema && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
+          <p className="text-sm font-semibold text-amber-800">
+            Schema migration needed
+          </p>
+          <p className="mt-1 text-xs text-amber-700">
+            Open{" "}
+            <strong>Supabase Dashboard → SQL Editor</strong>, paste the SQL
+            below, and click <strong>Run</strong>. Products still load — usage
+            and ingredients fields will be saved after the migration.
+          </p>
+          <pre className="mt-3 overflow-x-auto rounded-xl bg-amber-100 p-3 text-xs text-amber-900">
+            {schemaRepairSql}
+          </pre>
+          <div className="mt-3 flex gap-3">
+            <button
+              type="button"
+              onClick={() => void navigator.clipboard.writeText(schemaRepairSql)}
+              className="rounded-xl border border-amber-300 bg-white px-4 py-2 text-xs font-bold text-amber-800 transition hover:bg-amber-50"
+            >
+              Copy SQL
+            </button>
+            <button
+              type="button"
+              onClick={() => void repairSchema()}
+              className="rounded-xl border border-amber-300 bg-white px-4 py-2 text-xs font-bold text-amber-800 transition hover:bg-amber-50"
+            >
+              Retry auto-repair
+            </button>
+            <button
+              type="button"
+              onClick={() => setSchemaRepairSql(null)}
+              className="rounded-xl border border-amber-200 px-4 py-2 text-xs text-amber-600 transition hover:bg-amber-50"
+            >
+              Dismiss
+            </button>
+          </div>
         </div>
       )}
 

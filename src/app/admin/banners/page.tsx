@@ -58,6 +58,7 @@ export default function BannersPage() {
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [toast, setToast] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [desktopFile, setDesktopFile] = useState<File | null>(null);
   const [mobileFile, setMobileFile] = useState<File | null>(null);
   const [desktopPreview, setDesktopPreview] = useState("");
@@ -77,7 +78,7 @@ export default function BannersPage() {
       .order("id", { ascending: false });
 
     if (error) {
-      alert(error.message);
+      showToast("error", error.message);
       setPageLoading(false);
       return;
     }
@@ -110,6 +111,11 @@ export default function BannersPage() {
     setMobilePreview("");
   }
 
+  function showToast(type: "success" | "error", text: string) {
+    setToast({ type, text });
+    setTimeout(() => setToast(null), 4000);
+  }
+
   function handleImageChange(
     event: ChangeEvent<HTMLInputElement>,
     type: "desktop" | "mobile"
@@ -119,7 +125,7 @@ export default function BannersPage() {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      alert("Faqat rasm faylini yuklang");
+      showToast("error", "Faqat rasm faylini yuklang");
       return;
     }
 
@@ -173,7 +179,7 @@ export default function BannersPage() {
 
   async function saveBanner() {
     if (!desktopFile && !form.image && !mobileFile && !form.mobileImage) {
-      alert("Kamida bitta banner rasmini yuklang");
+      showToast("error", "Kamida bitta banner rasmini yuklang");
       return;
     }
 
@@ -215,7 +221,7 @@ export default function BannersPage() {
           ]);
 
       if (error) {
-        alert(error.message);
+        showToast("error", error.message);
         setLoading(false);
         return;
       }
@@ -223,7 +229,8 @@ export default function BannersPage() {
       resetForm();
       await loadBanners();
     } catch (error) {
-      alert(
+      showToast(
+        "error",
         error instanceof Error
           ? error.message
           : "Banner rasmini yuklashda xatolik yuz berdi"
@@ -262,7 +269,7 @@ export default function BannersPage() {
       .eq("id", id);
 
     if (error) {
-      alert(error.message);
+      showToast("error", error.message);
       return;
     }
 
@@ -276,7 +283,7 @@ export default function BannersPage() {
       .eq("id", id);
 
     if (error) {
-      alert(error.message);
+      showToast("error", error.message);
       return;
     }
 
@@ -290,6 +297,16 @@ export default function BannersPage() {
 
   return (
     <div className="space-y-6">
+      {toast && (
+        <div
+          className={`fixed right-6 top-6 z-50 max-w-sm rounded-2xl px-5 py-4 text-sm font-medium text-white shadow-xl transition-all ${
+            toast.type === "error" ? "bg-red-500" : "bg-green-500"
+          }`}
+        >
+          {toast.text}
+        </div>
+      )}
+
       <div className="rounded-[28px] border border-[#EEA391]/20 bg-[linear-gradient(135deg,#fffaf7,#ffffff)] p-6 shadow-sm">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>

@@ -78,6 +78,8 @@ export default function CategoriesPage() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [toast, setToast] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -99,7 +101,7 @@ export default function CategoriesPage() {
 
     if (error) {
       console.error(error);
-      alert(error.message);
+      setLoadError(error.message);
       setPageLoading(false);
       return;
     }
@@ -116,6 +118,11 @@ export default function CategoriesPage() {
       ...current,
       [field]: value,
     }));
+  }
+
+  function showToast(type: "success" | "error", text: string) {
+    setToast({ type, text });
+    window.setTimeout(() => setToast(null), 3500);
   }
 
   function resetForm() {
@@ -137,7 +144,7 @@ export default function CategoriesPage() {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      alert("Faqat rasm faylini yuklang");
+      showToast("error", "Faqat rasm faylini yuklang");
       return;
     }
 
@@ -184,7 +191,7 @@ export default function CategoriesPage() {
 
   async function saveCategory() {
     if (!form.name.trim()) {
-      alert("Kategoriya nomini kiriting");
+      showToast("error", "Kategoriya nomini kiriting");
       return;
     }
 
@@ -223,7 +230,7 @@ export default function CategoriesPage() {
           ]);
 
       if (error) {
-        alert(error.message);
+        showToast("error", error.message);
         setLoading(false);
         return;
       }
@@ -231,10 +238,8 @@ export default function CategoriesPage() {
       resetForm();
       await loadCategories();
     } catch (error) {
-      alert(
-        error instanceof Error
-          ? error.message
-          : "Rasm yuklashda xatolik yuz berdi"
+      showToast("error",
+        error instanceof Error ? error.message : "Rasm yuklashda xatolik yuz berdi"
       );
     } finally {
       setLoading(false);
@@ -272,7 +277,7 @@ export default function CategoriesPage() {
       .eq("id", id);
 
     if (error) {
-      alert(error.message);
+      showToast("error", error.message);
       return;
     }
 
@@ -288,7 +293,7 @@ export default function CategoriesPage() {
       .eq("id", id);
 
     if (error) {
-      alert(error.message);
+      showToast("error", error.message);
       return;
     }
 
@@ -311,6 +316,18 @@ export default function CategoriesPage() {
 
   return (
     <div className="space-y-6">
+      {toast && (
+        <div className={`fixed right-5 top-5 z-50 rounded-2xl px-5 py-4 text-sm font-semibold shadow-2xl ${toast.type === "success" ? "bg-emerald-600 text-white" : "bg-red-600 text-white"}`}>
+          {toast.text}
+        </div>
+      )}
+
+      {loadError && (
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
+          <strong>Error loading categories:</strong> {loadError}
+        </div>
+      )}
+
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-medium text-[#EEA391]">
