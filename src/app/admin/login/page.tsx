@@ -22,7 +22,7 @@ export default function AdminLoginPage() {
     });
 
     if (error || !data.user) {
-      setMessage(error?.message || "Login failed.");
+      setMessage("Invalid admin credentials.");
       setLoading(false);
       return;
     }
@@ -38,7 +38,7 @@ export default function AdminLoginPage() {
         error?: string;
       } | null;
       await supabase.auth.signOut();
-      setMessage(loginError?.error || "Your account is not enabled for admin access.");
+      setMessage(loginError?.error || "Invalid admin credentials.");
       setLoading(false);
       return;
     }

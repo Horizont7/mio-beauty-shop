@@ -127,7 +127,7 @@ create table if not exists public.admin_users (
   auth_user_id uuid,
   email text unique not null,
   full_name text,
-  role text default 'operator' check (role in ('owner', 'admin', 'manager', 'operator')),
+  role text default 'admin' check (role in ('owner', 'admin')),
   active boolean default true,
   created_at timestamptz default now()
 );
@@ -186,25 +186,25 @@ begin
     select 1 from pg_policies
     where schemaname = 'storage'
       and tablename = 'objects'
-      and policyname = 'Authenticated users can manage video highlight covers'
+      and policyname = 'Admins can manage video highlight covers'
   ) then
-    create policy "Authenticated users can manage video highlight covers"
+    create policy "Admins can manage video highlight covers"
     on storage.objects for all
     to authenticated
-    using (bucket_id = 'video-highlight-covers')
-    with check (bucket_id = 'video-highlight-covers');
+    using (bucket_id = 'video-highlight-covers' and public.is_admin())
+    with check (bucket_id = 'video-highlight-covers' and public.is_admin());
   end if;
 
   if not exists (
     select 1 from pg_policies
     where schemaname = 'storage'
       and tablename = 'objects'
-      and policyname = 'Authenticated users can manage video highlight videos'
+      and policyname = 'Admins can manage video highlight videos'
   ) then
-    create policy "Authenticated users can manage video highlight videos"
+    create policy "Admins can manage video highlight videos"
     on storage.objects for all
     to authenticated
-    using (bucket_id = 'video-highlight-videos')
-    with check (bucket_id = 'video-highlight-videos');
+    using (bucket_id = 'video-highlight-videos' and public.is_admin())
+    with check (bucket_id = 'video-highlight-videos' and public.is_admin());
   end if;
 end $$;

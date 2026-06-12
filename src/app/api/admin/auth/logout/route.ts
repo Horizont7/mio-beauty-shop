@@ -2,13 +2,25 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminSessionCookie, verifyAdminSessionCookie } from "@/lib/security/admin-session";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { getClientIp } from "@/lib/security/rate-limit";
+import { requireAdmin } from "@/lib/admin/auth";
 
 export async function POST(request: NextRequest) {
-  const session = await verifyAdminSessionCookie(
-    request.cookies.get(adminSessionCookie)?.value
-  );
+  try {
+    await requireAdmin(request);
+  } catch {
+    // Logout must still clear stale HttpOnly admin cookies.
+  }
+
+  const session = await verifyAdminSessionCookie(request.cookies.get(adminSessionCookie)?.value);
   const response = NextResponse.json({ ok: true });
 
+  response.cookies.set(adminSessionCookie, "", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 0,
+  });
   response.cookies.set(adminSessionCookie, "", {
     httpOnly: true,
     sameSite: "lax",

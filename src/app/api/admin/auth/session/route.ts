@@ -1,18 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { adminSessionCookie, verifyAdminSessionCookie } from "@/lib/security/admin-session";
+import { adminAuthErrorResponse, requireAdmin } from "@/lib/admin/auth";
 
 export async function GET(request: NextRequest) {
-  const session = await verifyAdminSessionCookie(
-    request.cookies.get(adminSessionCookie)?.value
-  );
+  try {
+    const admin = await requireAdmin(request);
 
-  if (!session) {
-    return NextResponse.json({ ok: false }, { status: 401 });
+    return NextResponse.json({
+      ok: true,
+      role: admin.role,
+    });
+  } catch (error) {
+    return adminAuthErrorResponse(error) || NextResponse.json({ ok: false }, { status: 500 });
   }
-
-  return NextResponse.json({
-    ok: true,
-    role: session.role,
-    expiresAt: session.expiresAt,
-  });
 }

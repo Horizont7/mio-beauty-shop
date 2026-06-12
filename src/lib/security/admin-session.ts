@@ -1,18 +1,19 @@
 export const adminSessionCookie = "mio-admin-session";
 
-export type AdminRole = "owner" | "admin" | "manager" | "content_manager";
+export type AdminRole = "owner" | "admin";
 
 export type AdminSession = {
   userId: string;
   adminUserId: number | string;
   role: AdminRole;
+  accessToken: string;
   expiresAt: number;
   issuedAt: number;
   version: 1;
 };
 
 const encoder = new TextEncoder();
-const maxAgeSeconds = 60 * 60 * 8;
+const maxAgeSeconds = 50 * 60;
 
 function base64UrlEncode(value: string) {
   const bytes = encoder.encode(value);
@@ -41,7 +42,6 @@ function getSecret() {
   return (
     process.env.ADMIN_SESSION_SECRET ||
     process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
     ""
   );
 }
@@ -116,6 +116,7 @@ export async function verifyAdminSessionCookie(value: string | undefined) {
       !session.userId ||
       !session.adminUserId ||
       !session.role ||
+      !session.accessToken ||
       session.expiresAt <= Math.floor(Date.now() / 1000)
     ) {
       return null;

@@ -20,8 +20,6 @@ export default function AdminUsersPage() {
           options: [
             { label: "Owner", value: "owner" },
             { label: "Admin", value: "admin" },
-            { label: "Manager", value: "manager" },
-            { label: "Operator", value: "operator" },
           ],
         },
         { key: "active", label: "Active", type: "checkbox" },

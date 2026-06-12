@@ -1,24 +1,3 @@
-create table if not exists public.security_audit_logs (
-  id bigserial primary key,
-  event_type text not null,
-  actor_user_id uuid,
-  actor_admin_user_id bigint,
-  resource_type text,
-  resource_id text,
-  ip_address text,
-  user_agent text,
-  metadata jsonb not null default '{}'::jsonb,
-  created_at timestamptz not null default now()
-);
-
-alter table public.security_audit_logs enable row level security;
-
-create index if not exists security_audit_logs_created_idx
-  on public.security_audit_logs (created_at desc);
-
-create index if not exists security_audit_logs_event_created_idx
-  on public.security_audit_logs (event_type, created_at desc);
-
 create or replace function public.is_admin()
 returns boolean
 language sql
@@ -62,30 +41,32 @@ begin
     update public.admin_users
     set role = 'admin'
     where role in ('operator', 'manager', 'content_manager');
+
+    alter table public.admin_users
+      drop constraint if exists admin_users_role_check;
+
+    alter table public.admin_users
+      add constraint admin_users_role_check
+      check (role in ('owner', 'admin'));
   end if;
 end $$;
+
+alter table if exists public.admin_users enable row level security;
+alter table if exists public.products enable row level security;
+alter table if exists public.categories enable row level security;
+alter table if exists public.banners enable row level security;
+alter table if exists public.video_highlights enable row level security;
+alter table if exists public.reviews enable row level security;
+alter table if exists public.orders enable row level security;
+alter table if exists public.order_items enable row level security;
+alter table if exists public.site_settings enable row level security;
+alter table if exists public.security_audit_logs enable row level security;
 
 drop policy if exists "Admins can manage admin users" on public.admin_users;
 drop policy if exists "Owners can manage admin users" on public.admin_users;
 
 create policy "Owners can manage admin users"
 on public.admin_users
-for all
-to authenticated
-using (public.is_owner())
-with check (public.is_owner());
-
-drop policy if exists "Owners can read security audit logs" on public.security_audit_logs;
-drop policy if exists "Service role can write security audit logs" on public.security_audit_logs;
-
-create policy "Owners can read security audit logs"
-on public.security_audit_logs
-for select
-to authenticated
-using (public.is_owner());
-
-create policy "Owners can manage security audit logs"
-on public.security_audit_logs
 for all
 to authenticated
 using (public.is_owner())

@@ -10,7 +10,7 @@ as $$
     from public.admin_users
     where auth_user_id = auth.uid()
       and active = true
-      and role in ('owner', 'admin', 'manager', 'operator')
+      and role in ('owner', 'admin')
   );
 $$;
 

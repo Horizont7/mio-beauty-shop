@@ -47,30 +47,4 @@ begin
     on storage.objects for select
     using (bucket_id = 'video-highlight-videos');
   end if;
-
-  if not exists (
-    select 1 from pg_policies
-    where schemaname = 'storage'
-      and tablename = 'objects'
-      and policyname = 'Authenticated users can manage video highlight covers'
-  ) then
-    create policy "Authenticated users can manage video highlight covers"
-    on storage.objects for all
-    to authenticated
-    using (bucket_id = 'video-highlight-covers')
-    with check (bucket_id = 'video-highlight-covers');
-  end if;
-
-  if not exists (
-    select 1 from pg_policies
-    where schemaname = 'storage'
-      and tablename = 'objects'
-      and policyname = 'Authenticated users can manage video highlight videos'
-  ) then
-    create policy "Authenticated users can manage video highlight videos"
-    on storage.objects for all
-    to authenticated
-    using (bucket_id = 'video-highlight-videos')
-    with check (bucket_id = 'video-highlight-videos');
-  end if;
 end $$;

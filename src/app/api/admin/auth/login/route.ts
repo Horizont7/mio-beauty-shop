@@ -9,12 +9,7 @@ import {
 } from "@/lib/security/admin-session";
 import { checkRateLimit, getClientIp } from "@/lib/security/rate-limit";
 
-const allowedRoles = new Set<AdminRole>([
-  "owner",
-  "admin",
-  "manager",
-  "content_manager",
-]);
+const allowedRoles = new Set<AdminRole>(["owner", "admin"]);
 
 export async function POST(request: NextRequest) {
   const ip = getClientIp(request.headers);
@@ -42,14 +37,14 @@ export async function POST(request: NextRequest) {
     typeof body?.accessToken === "string" ? body.accessToken.trim() : "";
 
   if (!accessToken) {
-    return NextResponse.json({ error: "Session token is required." }, { status: 400 });
+    return NextResponse.json({ error: "Invalid admin credentials." }, { status: 400 });
   }
 
   const supabase = createSupabaseAdminClient();
   const { data: userData, error: userError } = await supabase.auth.getUser(accessToken);
 
   if (userError || !userData.user) {
-    return NextResponse.json({ error: "Invalid session." }, { status: 401 });
+    return NextResponse.json({ error: "Invalid admin credentials." }, { status: 401 });
   }
 
   const { data: adminUser, error: adminError } = await supabase
@@ -70,7 +65,7 @@ export async function POST(request: NextRequest) {
       metadata: { reason: adminError?.message || "not_admin" },
     });
 
-    return NextResponse.json({ error: "Admin access denied." }, { status: 403 });
+    return NextResponse.json({ error: "Invalid admin credentials." }, { status: 403 });
   }
 
   const token = await sealAdminSession(
@@ -78,6 +73,7 @@ export async function POST(request: NextRequest) {
       userId: userData.user.id,
       adminUserId: adminUser.id,
       role,
+      accessToken,
     })
   );
   const response = NextResponse.json({ ok: true, role });
@@ -86,8 +82,15 @@ export async function POST(request: NextRequest) {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
-    path: "/admin",
+    path: "/",
     maxAge: adminSessionMaxAgeSeconds(),
+  });
+  response.cookies.set(adminSessionCookie, "", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/admin",
+    maxAge: 0,
   });
 
   await supabase.from("security_audit_logs").insert({
