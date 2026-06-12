@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
+import { checkRateLimit, getClientIp } from "@/lib/security/rate-limit";
 
 type CheckoutItem = {
   productId: number;
@@ -52,6 +53,18 @@ type SupabaseLikeError = {
   hint?: string;
 };
 
+const allowedCheckoutKeys = new Set([
+  "customerName",
+  "phone",
+  "city",
+  "address",
+  "comment",
+  "paymentMethod",
+  "items",
+]);
+const phonePattern = /^\+?[0-9 ()-]{7,20}$/;
+const recentOrderFingerprints = new Map<string, number>();
+
 class CheckoutError extends Error {
   code: CheckoutErrorCode;
   status: number;
@@ -65,7 +78,9 @@ class CheckoutError extends Error {
 }
 
 function cleanText(value: unknown, maxLength = 500) {
-  return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
+  return typeof value === "string"
+    ? value.replace(/[<>]/g, "").trim().slice(0, maxLength)
+    : "";
 }
 
 function makeOrderNumber() {
@@ -123,6 +138,51 @@ function normalizeItems(items: CheckoutItem[]) {
     productId,
     quantity,
   }));
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function hasUnknownFields(value: Record<string, unknown>) {
+  return Object.keys(value).some((key) => !allowedCheckoutKeys.has(key));
+}
+
+function makeOrderFingerprint({
+  ip,
+  phone,
+  address,
+  items,
+}: {
+  ip: string;
+  phone: string;
+  address: string;
+  items: ReturnType<typeof normalizeItems>;
+}) {
+  const itemKey = items
+    .map((item) => `${item.productId}:${item.quantity}`)
+    .sort()
+    .join(",");
+
+  return `${ip}:${phone}:${address.toLowerCase()}:${itemKey}`;
+}
+
+function rejectDuplicateOrder(fingerprint: string) {
+  const now = Date.now();
+  const previous = recentOrderFingerprints.get(fingerprint);
+
+  for (const [key, expiresAt] of recentOrderFingerprints) {
+    if (expiresAt <= now) {
+      recentOrderFingerprints.delete(key);
+    }
+  }
+
+  if (previous && previous > now) {
+    return true;
+  }
+
+  recentOrderFingerprints.set(fingerprint, now + 2 * 60 * 1000);
+  return false;
 }
 
 function prepareOrderItems(
@@ -337,11 +397,54 @@ async function insertOrderWithItems({
 
 export async function POST(request: NextRequest) {
   try {
+    const ip = getClientIp(request.headers);
+    const rateLimit = checkRateLimit({
+      key: `checkout:${ip}`,
+      limit: 5,
+      windowMs: 10 * 60 * 1000,
+    });
+
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: "Too many checkout requests.", errorCode: "invalid_order_data" },
+        { status: 429 }
+      );
+    }
+
+    if (!request.headers.get("content-type")?.includes("application/json")) {
+      return NextResponse.json(
+        { error: "Checkout requires JSON.", errorCode: "invalid_order_data" },
+        { status: 415 }
+      );
+    }
+
+    const contentLength = Number(request.headers.get("content-length") || 0);
+    if (contentLength > 32_000) {
+      return NextResponse.json(
+        { error: "Checkout payload is too large.", errorCode: "invalid_order_data" },
+        { status: 413 }
+      );
+    }
+
     let body: CheckoutRequestBody;
 
     try {
-      body = (await request.json()) as CheckoutRequestBody;
+      const parsed = await request.json();
+
+      if (!isPlainObject(parsed) || hasUnknownFields(parsed)) {
+        throw new CheckoutError(
+          "invalid_order_data",
+          "Checkout payload contains invalid fields.",
+          400
+        );
+      }
+
+      body = parsed as CheckoutRequestBody;
     } catch (parseError) {
+      if (parseError instanceof CheckoutError) {
+        throw parseError;
+      }
+
       logCheckoutError("validation failed", parseError, { reason: "invalid json" });
       return NextResponse.json(
         { error: "Invalid order data.", errorCode: "invalid_order_data" },
@@ -371,6 +474,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!phonePattern.test(phone)) {
+      logCheckoutError("validation failed", new Error("invalid phone format"));
+      return NextResponse.json(
+        {
+          error: "Phone number format is invalid.",
+          errorCode: "invalid_order_data",
+        },
+        { status: 400 }
+      );
+    }
+
     if (items.length === 0) {
       logCheckoutError("validation failed", new Error("empty cart"));
       return NextResponse.json(
@@ -391,13 +505,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const fingerprint = makeOrderFingerprint({
+      ip,
+      phone,
+      address,
+      items: normalizedItems,
+    });
+
+    if (rejectDuplicateOrder(fingerprint)) {
+      return NextResponse.json(
+        {
+          error: "Duplicate checkout request detected.",
+          errorCode: "invalid_order_data",
+        },
+        { status: 409 }
+      );
+    }
+
     const productIds = normalizedItems.map((item) => item.productId);
     const supabase = createSupabaseAdminClient();
 
     console.info("[checkout] request accepted", {
       itemCount: normalizedItems.length,
       hasSupabaseUrl: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL),
-      hasServiceRoleKey: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
     });
 
     const { data: products, error } = await supabase

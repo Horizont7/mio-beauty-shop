@@ -3,11 +3,8 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ReactNode, useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
 
 type GuardState = "checking" | "allowed" | "denied";
-
-const adminRoles = ["owner", "admin", "manager", "operator"];
 
 export default function AdminAuthGuard({
   children,
@@ -31,34 +28,15 @@ export default function AdminAuthGuard({
     async function verifyAdmin() {
       setState("checking");
 
-      const { data: sessionData } = await supabase.auth.getSession();
-      const user = sessionData.session?.user;
-
-      if (!user) {
-        if (active) {
-          setState("denied");
-          document.cookie = "mio-admin-auth=; path=/admin; max-age=0; samesite=lax";
-          router.replace("/admin/login");
-        }
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from("admin_users")
-        .select("id,role,active")
-        .eq("auth_user_id", user.id)
-        .eq("active", true)
-        .maybeSingle();
-
-      const allowed =
-        !error && data && adminRoles.includes(String(data.role || ""));
+      const response = await fetch("/api/admin/auth/session", {
+        cache: "no-store",
+      });
+      const allowed = response.ok;
 
       if (!active) return;
 
       if (!allowed) {
         setState("denied");
-        await supabase.auth.signOut();
-        document.cookie = "mio-admin-auth=; path=/admin; max-age=0; samesite=lax";
         router.replace("/admin/login");
         return;
       }
@@ -68,13 +46,8 @@ export default function AdminAuthGuard({
 
     void verifyAdmin();
 
-    const { data: listener } = supabase.auth.onAuthStateChange(() => {
-      void verifyAdmin();
-    });
-
     return () => {
       active = false;
-      listener.subscription.unsubscribe();
     };
   }, [isLoginPage, router]);
 

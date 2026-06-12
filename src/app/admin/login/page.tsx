@@ -27,23 +27,24 @@ export default function AdminLoginPage() {
       return;
     }
 
-    const { data: adminUser, error: adminError } = await supabase
-      .from("admin_users")
-      .select("id,role,active")
-      .eq("auth_user_id", data.user.id)
-      .eq("active", true)
-      .maybeSingle();
+    const loginResponse = await fetch("/api/admin/auth/login", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ accessToken: data.session?.access_token }),
+    });
 
-    if (adminError || !adminUser) {
+    if (!loginResponse.ok) {
+      const loginError = (await loginResponse.json().catch(() => null)) as {
+        error?: string;
+      } | null;
       await supabase.auth.signOut();
-      setMessage("Your account is not enabled for admin access.");
+      setMessage(loginError?.error || "Your account is not enabled for admin access.");
       setLoading(false);
       return;
     }
 
     const nextPath =
       new URLSearchParams(window.location.search).get("next") || "/admin";
-    document.cookie = "mio-admin-auth=1; path=/admin; max-age=86400; samesite=lax";
     router.replace(nextPath.startsWith("/admin") ? nextPath : "/admin");
     router.refresh();
   }

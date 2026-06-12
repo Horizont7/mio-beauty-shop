@@ -43,6 +43,8 @@ type AdminResourcePageProps = {
   searchKeys?: string[];
   orderBy?: string;
   setupHint?: string;
+  allowCreate?: boolean;
+  allowEdit?: boolean;
   allowDelete?: boolean;
   allowActiveToggle?: boolean;
 };
@@ -100,6 +102,8 @@ export default function AdminResourcePage({
   searchKeys = [],
   orderBy = "created_at",
   setupHint,
+  allowCreate = true,
+  allowEdit = true,
   allowDelete = true,
   allowActiveToggle = true,
 }: AdminResourcePageProps) {
@@ -264,13 +268,15 @@ export default function AdminResourcePage({
             <h1 className="mt-2 text-3xl font-bold text-gray-950">{title}</h1>
             <p className="mt-2 text-sm text-gray-500">{description}</p>
           </div>
-          <button
-            type="button"
-            onClick={openCreate}
-            className="rounded-full bg-[#EEA391] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-[#EEA391]/25 transition hover:bg-[#df8f7c]"
-          >
-            Add new
-          </button>
+          {allowCreate && (
+            <button
+              type="button"
+              onClick={openCreate}
+              className="rounded-full bg-[#EEA391] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-[#EEA391]/25 transition hover:bg-[#df8f7c]"
+            >
+              Add new
+            </button>
+          )}
         </div>
       </div>
 
@@ -333,13 +339,15 @@ export default function AdminResourcePage({
                     ))}
                     <td className="px-5 py-4">
                       <div className="flex justify-end gap-2">
-                        <button
-                          type="button"
-                          onClick={() => openEdit(row)}
-                          className="rounded-xl border border-gray-200 px-3 py-2 text-xs font-bold text-gray-700 transition hover:border-[#EEA391] hover:text-[#B96C5C]"
-                        >
-                          Edit
-                        </button>
+                        {allowEdit && (
+                          <button
+                            type="button"
+                            onClick={() => openEdit(row)}
+                            className="rounded-xl border border-gray-200 px-3 py-2 text-xs font-bold text-gray-700 transition hover:border-[#EEA391] hover:text-[#B96C5C]"
+                          >
+                            Edit
+                          </button>
+                        )}
                         {allowActiveToggle && "active" in row && (
                           <button
                             type="button"

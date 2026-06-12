@@ -21,6 +21,7 @@ const navItems = [
   { href: "/admin/payment-settings", label: "Payments" },
   { href: "/admin/site-settings", label: "Site settings" },
   { href: "/admin/users", label: "Admin users" },
+  { href: "/admin/security", label: "Security" },
 ];
 
 export default function AdminLayoutShell({
@@ -35,8 +36,11 @@ export default function AdminLayoutShell({
   }
 
   async function signOut() {
+    await fetch("/api/admin/auth/logout", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+    });
     await supabase.auth.signOut();
-    document.cookie = "mio-admin-auth=; path=/admin; max-age=0; samesite=lax";
     window.location.href = "/admin/login";
   }
 

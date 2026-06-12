@@ -1,15 +1,21 @@
 import { NextResponse, type NextRequest } from "next/server";
+import {
+  adminSessionCookie,
+  verifyAdminSessionCookie,
+} from "@/lib/security/admin-session";
 
-const adminSessionCookie = "mio-admin-auth";
-
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (!pathname.startsWith("/admin") || pathname === "/admin/login") {
     return NextResponse.next();
   }
 
-  if (request.cookies.get(adminSessionCookie)?.value === "1") {
+  const session = await verifyAdminSessionCookie(
+    request.cookies.get(adminSessionCookie)?.value
+  );
+
+  if (session) {
     return NextResponse.next();
   }
 
