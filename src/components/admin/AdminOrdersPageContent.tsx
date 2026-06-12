@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { printTtnDocument, type TtnItemData } from "@/lib/ttn-print";
 
 type OrderSchema = "modern" | "legacy";
 
@@ -136,6 +137,9 @@ export default function AdminOrdersPageContent() {
   const [itemsLoading, setItemsLoading] = useState(false);
   const [error, setError] = useState("");
   const [toast, setToast] = useState<ToastMessage | null>(null);
+  const [ttnLoading, setTtnLoading] = useState<Record<string, "excel" | "pdf" | null>>({});
+  // Cache items per order to avoid refetching for TTN
+  const itemsCache = useRef<Record<string, OrderItemRow[]>>({});
 
   const showToast = useCallback((type: ToastMessage["type"], text: string) => {
     setToast({ type, text });
@@ -188,48 +192,8 @@ export default function AdminOrdersPageContent() {
     setItems([]);
     setItemsLoading(true);
 
-    const modernResult = await supabase
-      .from("order_items")
-      .select(modernItemSelect)
-      .eq("order_id", order.id)
-      .order("created_at", { ascending: false });
-
-    if (!modernResult.error) {
-      setItems(((modernResult.data || []) as Record<string, unknown>[]).map(normalizeModernItem));
-      setItemsLoading(false);
-      return;
-    }
-
-    const skuUnitPriceResult = await supabase
-      .from("order_items")
-      .select(skuUnitPriceItemSelect)
-      .eq("order_id", order.id)
-      .order("created_at", { ascending: false });
-
-    if (!skuUnitPriceResult.error) {
-      setItems(
-        ((skuUnitPriceResult.data || []) as Record<string, unknown>[]).map(
-          normalizeLegacyItem
-        )
-      );
-      setItemsLoading(false);
-      return;
-    }
-
-    const legacyResult = await supabase
-      .from("order_items")
-      .select(legacyItemSelect)
-      .eq("order_id", order.id)
-      .order("created_at", { ascending: false });
-
-    if (legacyResult.error) {
-      showToast("error", legacyResult.error.message);
-      setItems([]);
-      setItemsLoading(false);
-      return;
-    }
-
-    setItems(((legacyResult.data || []) as Record<string, unknown>[]).map(normalizeLegacyItem));
+    const fetched = await fetchItemsForOrder(order);
+    setItems(fetched);
     setItemsLoading(false);
   }
 
@@ -252,6 +216,115 @@ export default function AdminOrdersPageContent() {
         ? { ...current, orderStatus: nextStatus }
         : current
     );
+  }
+
+  async function fetchItemsForOrder(order: OrderRow): Promise<OrderItemRow[]> {
+    const key = String(order.id);
+    if (itemsCache.current[key]) return itemsCache.current[key];
+
+    const modernResult = await supabase
+      .from("order_items")
+      .select(modernItemSelect)
+      .eq("order_id", order.id)
+      .order("id", { ascending: true });
+
+    if (!modernResult.error && modernResult.data?.length) {
+      const normalized = (modernResult.data as Record<string, unknown>[]).map(normalizeModernItem);
+      itemsCache.current[key] = normalized;
+      return normalized;
+    }
+
+    const skuResult = await supabase
+      .from("order_items")
+      .select(skuUnitPriceItemSelect)
+      .eq("order_id", order.id)
+      .order("id", { ascending: true });
+
+    if (!skuResult.error) {
+      const normalized = (skuResult.data as Record<string, unknown>[]).map(normalizeLegacyItem);
+      itemsCache.current[key] = normalized;
+      return normalized;
+    }
+
+    const legacyResult = await supabase
+      .from("order_items")
+      .select(legacyItemSelect)
+      .eq("order_id", order.id)
+      .order("id", { ascending: true });
+
+    const normalized = legacyResult.error
+      ? []
+      : (legacyResult.data as Record<string, unknown>[]).map(normalizeLegacyItem);
+    itemsCache.current[key] = normalized;
+    return normalized;
+  }
+
+  async function handleExcelTtn(order: OrderRow) {
+    const key = String(order.id);
+    setTtnLoading((prev) => ({ ...prev, [key]: "excel" }));
+    try {
+      const response = await fetch("/api/admin/ttn", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId: order.id, managerName: "Менеджер" }),
+      });
+
+      if (!response.ok) {
+        const err = (await response.json().catch(() => ({}))) as { error?: string };
+        showToast("error", err.error ?? "Ошибка генерации Excel");
+        return;
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `TTN-${order.orderNumber}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast("success", "Excel TTN загружен");
+    } catch {
+      showToast("error", "Не удалось сгенерировать Excel");
+    } finally {
+      setTtnLoading((prev) => ({ ...prev, [key]: null }));
+    }
+  }
+
+  async function handlePdfTtn(order: OrderRow) {
+    const key = String(order.id);
+    setTtnLoading((prev) => ({ ...prev, [key]: "pdf" }));
+    try {
+      const orderItems = await fetchItemsForOrder(order);
+      const ttnItems: TtnItemData[] = orderItems.map((item, index) => ({
+        num: index + 1,
+        sku: item.sku || "—",
+        name: item.productName || "Товар",
+        qty: item.quantity,
+        unitPrice: item.unitPrice,
+        total: item.totalPrice,
+      }));
+      printTtnDocument(
+        {
+          orderNumber: order.orderNumber,
+          customerName: order.customerName,
+          phone: order.phone,
+          address: order.address,
+          paymentMethod: order.paymentMethod,
+          createdAt: order.createdAt,
+          subtotal: order.subtotal,
+          deliveryPrice: order.deliveryPrice,
+          total: order.total,
+        },
+        ttnItems,
+        "Менеджер"
+      );
+    } catch {
+      showToast("error", "Не удалось сгенерировать PDF");
+    } finally {
+      setTtnLoading((prev) => ({ ...prev, [key]: null }));
+    }
   }
 
   const filteredOrders = useMemo(() => {
@@ -372,13 +445,31 @@ export default function AdminOrdersPageContent() {
                         : "-"}
                     </td>
                     <td className="px-5 py-4 text-right">
-                      <button
-                        type="button"
-                        onClick={() => void openOrder(order)}
-                        className="rounded-xl border border-gray-200 px-3 py-2 text-xs font-bold text-gray-700 transition hover:border-[#EEA391] hover:text-[#B96C5C]"
-                      >
-                        Details
-                      </button>
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => void openOrder(order)}
+                          className="rounded-xl border border-gray-200 px-3 py-2 text-xs font-bold text-gray-700 transition hover:border-[#EEA391] hover:text-[#B96C5C]"
+                        >
+                          View
+                        </button>
+                        <button
+                          type="button"
+                          disabled={ttnLoading[String(order.id)] === "excel"}
+                          onClick={() => void handleExcelTtn(order)}
+                          className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-wait disabled:opacity-60"
+                        >
+                          {ttnLoading[String(order.id)] === "excel" ? "…" : "Excel TTN"}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={ttnLoading[String(order.id)] === "pdf"}
+                          onClick={() => void handlePdfTtn(order)}
+                          className="rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-bold text-blue-700 transition hover:bg-blue-100 disabled:cursor-wait disabled:opacity-60"
+                        >
+                          {ttnLoading[String(order.id)] === "pdf" ? "…" : "PDF TTN"}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -415,13 +506,31 @@ export default function AdminOrdersPageContent() {
                   {selectedOrder.orderNumber}
                 </h2>
               </div>
-              <button
-                type="button"
-                onClick={() => setSelectedOrder(null)}
-                className="rounded-full border border-gray-200 px-4 py-2 text-sm font-bold text-gray-600 transition hover:border-[#EEA391] hover:text-[#B96C5C]"
-              >
-                Close
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  disabled={ttnLoading[String(selectedOrder.id)] === "excel"}
+                  onClick={() => void handleExcelTtn(selectedOrder)}
+                  className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-wait disabled:opacity-60"
+                >
+                  {ttnLoading[String(selectedOrder.id)] === "excel" ? "…" : "Excel TTN"}
+                </button>
+                <button
+                  type="button"
+                  disabled={ttnLoading[String(selectedOrder.id)] === "pdf"}
+                  onClick={() => void handlePdfTtn(selectedOrder)}
+                  className="rounded-full border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-bold text-blue-700 transition hover:bg-blue-100 disabled:cursor-wait disabled:opacity-60"
+                >
+                  {ttnLoading[String(selectedOrder.id)] === "pdf" ? "…" : "PDF TTN"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedOrder(null)}
+                  className="rounded-full border border-gray-200 px-4 py-2 text-sm font-bold text-gray-600 transition hover:border-[#EEA391] hover:text-[#B96C5C]"
+                >
+                  Close
+                </button>
+              </div>
             </div>
 
             <div className="flex-1 space-y-6 overflow-y-auto px-6 py-6">
