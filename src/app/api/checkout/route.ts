@@ -253,6 +253,20 @@ async function insertOrderWithItems({
   total: number;
   orderItems: PreparedOrderItem[];
 }) {
+  async function insertProductSkuItems(orderId: number) {
+    return supabase.from("order_items").insert(
+      orderItems.map((item) => ({
+        order_id: orderId,
+        product_id: item.product_id,
+        product_name: item.product_name,
+        product_sku: item.product_sku,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        total_price: item.total_price,
+      }))
+    );
+  }
+
   async function insertSkuItems(orderId: number, priceColumn: "unit_price" | "price") {
     return supabase.from("order_items").insert(
       orderItems.map((item) => ({
@@ -327,17 +341,18 @@ async function insertOrderWithItems({
     });
 
     if (isSchemaCacheError(modernItemsError)) {
-      const { error: legacyItemsForModernOrderError } = await insertCompatibleSkuItems(
-        modernOrderResult.data.id
-      );
+      const productSkuItemsResult = await insertProductSkuItems(modernOrderResult.data.id);
+      const legacyItemsForModernOrderResult = productSkuItemsResult.error
+        ? await insertCompatibleSkuItems(modernOrderResult.data.id)
+        : productSkuItemsResult;
 
-      if (!legacyItemsForModernOrderError) {
+      if (!legacyItemsForModernOrderResult.error) {
         return modernOrderResult.data.order_number || orderNumber;
       }
 
       logCheckoutError(
         "legacy order_items insert for modern order failed",
-        legacyItemsForModernOrderError,
+        legacyItemsForModernOrderResult.error,
         {
           orderId: modernOrderResult.data.id,
           orderNumber,

@@ -36,6 +36,65 @@ function fmtMoney(n: number) {
   return n.toLocaleString("ru-RU") + " сум";
 }
 
+function asRecordArray(value: unknown): Record<string, unknown>[] {
+  if (Array.isArray(value)) {
+    return value.filter(
+      (item): item is Record<string, unknown> =>
+        Boolean(item) && typeof item === "object" && !Array.isArray(item)
+    );
+  }
+
+  if (typeof value === "string") {
+    try {
+      return asRecordArray(JSON.parse(value));
+    } catch {
+      return [];
+    }
+  }
+
+  return [];
+}
+
+function findLegacyOrderItems(order: Record<string, unknown>) {
+  const directFields = [
+    "items",
+    "order_items",
+    "cart_items",
+    "products",
+    "products_json",
+    "items_json",
+  ];
+
+  for (const field of directFields) {
+    const parsed = asRecordArray(order[field]);
+    if (parsed.length) return parsed;
+  }
+
+  for (const field of ["metadata", "order_data", "data", "payload"]) {
+    const nested = order[field];
+    const parsedNested =
+      typeof nested === "string"
+        ? (() => {
+            try {
+              return JSON.parse(nested) as unknown;
+            } catch {
+              return null;
+            }
+          })()
+        : nested;
+
+    if (parsedNested && typeof parsedNested === "object" && !Array.isArray(parsedNested)) {
+      const nestedRecord = parsedNested as Record<string, unknown>;
+      for (const itemField of directFields) {
+        const parsed = asRecordArray(nestedRecord[itemField]);
+        if (parsed.length) return parsed;
+      }
+    }
+  }
+
+  return [];
+}
+
 // ─── WorksheetBuilder helpers ───────────────────────────────────────────────
 type BorderSide = "thin" | "medium" | "thick" | "hair" | "dotted" | "dashed";
 
@@ -140,37 +199,70 @@ export async function POST(request: NextRequest) {
   const createdAt = tv(order.created_at);
 
   // ── Fetch order items ──────────────────────────────────────────────────
+  // Use select("*") to avoid column-not-found errors regardless of schema version.
   let rawItems: Record<string, unknown>[] = [];
 
-  const modernItems = await supabase
+  const { data: itemsData, error: itemsError } = await supabase
     .from("order_items")
-    .select("id,product_name,product_sku,quantity,unit_price,total_price")
+    .select("*")
     .eq("order_id", orderId)
     .order("id", { ascending: true });
 
-  if (!modernItems.error && modernItems.data?.length) {
-    rawItems = modernItems.data as Record<string, unknown>[];
+  if (itemsError) {
+    console.error("[TTN] order_items query error", {
+      orderId,
+      code: itemsError.code,
+      message: itemsError.message,
+      details: itemsError.details,
+    });
   } else {
-    const legacyItems = await supabase
-      .from("order_items")
-      .select("id,product_name,sku,quantity,unit_price,price,total_price")
-      .eq("order_id", orderId)
-      .order("id", { ascending: true });
-    if (!legacyItems.error) {
-      rawItems = (legacyItems.data || []) as Record<string, unknown>[];
+    rawItems = (itemsData || []) as Record<string, unknown>[];
+    console.info("[TTN] order_items fetched", {
+      orderId,
+      count: rawItems.length,
+      columns: rawItems[0] ? Object.keys(rawItems[0]) : [],
+    });
+  }
+
+  if (rawItems.length === 0) {
+    const fullOrderResult = await supabase
+      .from("orders")
+      .select("*")
+      .eq("id", orderId)
+      .maybeSingle();
+
+    rawItems = findLegacyOrderItems(
+      (fullOrderResult.data as Record<string, unknown> | null) ?? order
+    );
+    if (rawItems.length) {
+      console.info("[TTN] legacy order item JSON fallback used", {
+        orderId,
+        count: rawItems.length,
+      });
     }
   }
 
-  const items = rawItems.map((r, i) => ({
-    num: i + 1,
-    sku: tv(r.product_sku ?? r.sku) || "—",
-    name: tv(r.product_name) || "Товар",
-    qty: nv(r.quantity),
-    unitPrice: nv(r.unit_price ?? r.price),
-    discount: 0,
-    finalPrice: nv(r.unit_price ?? r.price),
-    total: nv(r.total_price),
-  }));
+  const items = rawItems.map((r, i) => {
+    const qty = nv(r.quantity ?? r.qty ?? r.count);
+    const unitPrice = nv(
+      r.unit_price ?? r.price ?? r.unit_cost ?? r.item_price ?? r.price_per_item
+    );
+    const lineTotal = nv(
+      r.total_price ?? r.line_total ?? r.row_total ?? r.total ?? r.amount
+    );
+
+    return {
+      num: i + 1,
+      // Support every column name variant across all schema generations.
+      sku: tv(r.product_sku ?? r.sku ?? r.product_code ?? r.code) || "—",
+      name: tv(r.product_name ?? r.name ?? r.title ?? r.product_title) || "Товар",
+      qty,
+      unitPrice,
+      discount: 0,
+      finalPrice: unitPrice,
+      total: lineTotal || unitPrice * qty,
+    };
+  });
 
   const totalQty = items.reduce((s, i) => s + i.qty, 0);
 
