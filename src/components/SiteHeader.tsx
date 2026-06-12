@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { NavigationCategory } from "@/lib/categories";
 import { Language, languages } from "@/lib/translations";
@@ -108,24 +109,38 @@ export default function SiteHeader({
             {t("shop")}
           </Link>
           <Link
-            href="/cart"
-            className="relative hidden rounded-full border border-black/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] md:inline-flex"
+            href="/favorites"
+            aria-label={t("favorites")}
+            className="relative hidden items-center justify-center rounded-full border border-black/10 p-2.5 transition hover:border-[var(--brand-mio-beauty-primary)] hover:bg-[#fff5f2] md:inline-flex"
           >
-            {t("cart")}
-            {cartCount > 0 && (
-              <span className="absolute -right-2 -top-2 min-w-5 rounded-full bg-[#EEA391] px-1 text-center text-[10px] leading-5 text-white">
-                {cartCount}
+            <Image
+              src="/heart.png"
+              alt={t("favorites")}
+              width={26}
+              height={26}
+              className="h-[26px] w-[26px] object-contain transition-transform duration-200 hover:scale-110"
+            />
+            {favoritesCount > 0 && (
+              <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#211f1e] px-1 text-center text-[10px] font-bold leading-none text-white">
+                {favoritesCount}
               </span>
             )}
           </Link>
           <Link
-            href="/favorites"
-            className="relative hidden rounded-full border border-black/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] md:inline-flex"
+            href="/cart"
+            aria-label={t("cart")}
+            className="relative hidden items-center justify-center rounded-full border border-black/10 p-2.5 transition hover:border-[var(--brand-mio-beauty-primary)] hover:bg-[#fff5f2] md:inline-flex"
           >
-            {t("favorites")}
-            {favoritesCount > 0 && (
-              <span className="absolute -right-2 -top-2 min-w-5 rounded-full bg-[#211f1e] px-1 text-center text-[10px] leading-5 text-white">
-                {favoritesCount}
+            <Image
+              src="/shoppingcart.png"
+              alt={t("cart")}
+              width={26}
+              height={26}
+              className="h-[26px] w-[26px] object-contain transition-transform duration-200 hover:scale-110"
+            />
+            {cartCount > 0 && (
+              <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#EEA391] px-1 text-center text-[10px] font-bold leading-none text-white">
+                {cartCount}
               </span>
             )}
           </Link>
