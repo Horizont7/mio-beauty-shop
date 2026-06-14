@@ -43,7 +43,6 @@ const topNavItems: TopNavItem[] = [
           { href: "/admin/orders/archive", label: "Архив заказов" },
           { href: "/admin/orders/cancelled", label: "Отмененные заказы" },
           { href: "/admin/returns", label: "Возвраты" },
-          { href: "/admin/leads", label: "Лиды" },
         ],
       },
       {
@@ -94,10 +93,22 @@ const topNavItems: TopNavItem[] = [
     ],
   },
   {
-    label: "Клиенты",
-    links: [
-      { href: "/admin/customers", label: "Клиенты" },
-      { href: "/admin/reviews", label: "Отзывы" },
+    label: "Справочники",
+    darkDropdown: true,
+    columns: [
+      {
+        title: "Справочники",
+        links: [
+          { href: "/admin/products", label: "Товары" },
+          { href: "/admin/prices", label: "Цены" },
+          { href: "/admin/brands", label: "Бренды" },
+          { href: "/admin/services", label: "Услуги" },
+          { href: "/admin/comments", label: "Комментарии" },
+          { href: "/admin/surveys", label: "Опросники" },
+          { href: "/admin/customers", label: "Клиенты" },
+          { href: "/admin/leads", label: "Лиды" },
+        ],
+      },
     ],
   },
   {
@@ -114,10 +125,6 @@ const topNavItems: TopNavItem[] = [
       { href: "/admin/banners", label: "Баннеры" },
       { href: "/admin/video-highlights", label: "Видео-подборки" },
     ],
-  },
-  {
-    label: "Справочники",
-    links: [{ href: "/admin/site-settings", label: "Настройки сайта" }],
   },
   {
     label: "Настройки",
