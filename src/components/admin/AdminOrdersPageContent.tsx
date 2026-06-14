@@ -145,6 +145,28 @@ function normalizeLegacyItem(row: Record<string, unknown>): OrderItemRow {
 }
 
 
+function IndeterminateCheckbox({
+  checked,
+  indeterminate,
+  onChange,
+  className,
+}: {
+  checked: boolean;
+  indeterminate: boolean;
+  onChange: () => void;
+  className?: string;
+}) {
+  return (
+    <input
+      type="checkbox"
+      ref={(el) => { if (el) el.indeterminate = indeterminate; }}
+      checked={checked}
+      onChange={onChange}
+      className={className}
+    />
+  );
+}
+
 function StatusDropdown({
   value,
   onChange,
@@ -219,7 +241,9 @@ export default function AdminOrdersPageContent() {
   const [error, setError] = useState("");
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const [ttnLoading, setTtnLoading] = useState<Record<string, "excel" | "pdf" | null>>({});
-  // Cache items per order to avoid refetching for TTN
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkStatusOpen, setBulkStatusOpen] = useState(false);
+  const [bulkLoading, setBulkLoading] = useState(false);
   const itemsCache = useRef<Record<string, OrderItemRow[]>>({});
 
   const showToast = useCallback((type: ToastMessage["type"], text: string) => {
@@ -430,6 +454,83 @@ export default function AdminOrdersPageContent() {
     }
   }
 
+  function toggleSelectAll() {
+    const allVisible = filteredOrders.every((o) => selectedIds.has(String(o.id)));
+    if (allVisible && filteredOrders.length > 0) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredOrders.map((o) => String(o.id))));
+    }
+  }
+
+  function toggleSelectOne(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  async function handleBulkStatusChange(nextStatus: string) {
+    if (selectedIds.size === 0) return;
+    setBulkLoading(true);
+    setBulkStatusOpen(false);
+
+    const selected = orders.filter((o) => selectedIds.has(String(o.id)));
+    const updates = selected.map((order) => {
+      const column = order.schema === "modern" ? "order_status" : "status";
+      return supabase.from("orders").update({ [column]: nextStatus }).eq("id", order.id);
+    });
+
+    const results = await Promise.all(updates);
+    const failed = results.filter((r) => r.error);
+
+    if (failed.length > 0) {
+      showToast("error", `Ошибка: ${failed[0].error?.message ?? "неизвестно"}`);
+    } else {
+      showToast("success", `Статус обновлён для ${selected.length} заказов`);
+      setSelectedIds(new Set());
+    }
+
+    await loadOrders();
+    setBulkLoading(false);
+  }
+
+  async function handleBulkExcel() {
+    if (selectedIds.size === 0) return;
+    setBulkLoading(true);
+    try {
+      const ids = [...selectedIds];
+      const response = await fetch("/api/admin/ttn/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderIds: ids, managerName: "Менеджер" }),
+      });
+
+      if (!response.ok) {
+        const err = (await response.json().catch(() => ({}))) as { error?: string };
+        showToast("error", err.error ?? "Ошибка генерации Excel");
+        return;
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "MIO_BEAUTY_TTN_SELECTED_ORDERS.xlsx";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast("success", `Накладные загружены (${ids.length} шт.)`);
+    } catch {
+      showToast("error", "Не удалось сгенерировать Excel");
+    } finally {
+      setBulkLoading(false);
+    }
+  }
+
   const filteredOrders = useMemo(() => {
     const query = search.trim().toLowerCase();
     if (!query) return orders;
@@ -441,6 +542,11 @@ export default function AdminOrdersPageContent() {
         .includes(query)
     );
   }, [orders, search]);
+
+  const someSelected = selectedIds.size > 0;
+  const allVisibleSelected =
+    filteredOrders.length > 0 &&
+    filteredOrders.every((o) => selectedIds.has(String(o.id)));
 
   const summary = useMemo(() => {
     let totalAmount = 0;
@@ -616,10 +722,98 @@ export default function AdminOrdersPageContent() {
           <h2 className="text-sm font-bold text-gray-950">Список заказов</h2>
           <span className="text-xs text-gray-400 tabular-nums">{schema}</span>
         </div>
+
+        {/* ── Bulk action bar (visible when ≥1 order selected) ── */}
+        {someSelected && (
+          <div className="flex flex-wrap items-center gap-2 border-b border-gray-100 bg-[#fff8f6] px-4 py-2">
+            <span className="text-[11px] font-semibold text-[#B96C5C]">
+              Выбрано: {selectedIds.size}
+            </span>
+            <div className="flex-1" />
+
+            {/* Изменить статус */}
+            <div className="relative">
+              {bulkStatusOpen && (
+                <button
+                  type="button"
+                  aria-label="Закрыть"
+                  className="fixed inset-0 z-10 cursor-default"
+                  onClick={() => setBulkStatusOpen(false)}
+                />
+              )}
+              <button
+                type="button"
+                disabled={bulkLoading}
+                onClick={() => setBulkStatusOpen((o) => !o)}
+                className="relative z-20 flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 transition hover:border-[#EEA391] hover:text-[#B96C5C] disabled:opacity-50"
+              >
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+                  <circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.4"/>
+                  <path d="M3.5 5h3M5 3.5v3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                </svg>
+                Изменить статус
+                <svg width="8" height="5" viewBox="0 0 8 5" fill="none" aria-hidden="true" className="opacity-50">
+                  <path d="M1 1L4 4L7 1" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+              {bulkStatusOpen && (
+                <div className="absolute left-0 top-full z-30 mt-1 min-w-[152px] overflow-hidden rounded-xl border border-gray-100 bg-white py-1 shadow-xl">
+                  {ORDER_STATUS_KEYS.map((key) => {
+                    const cfg = ORDER_STATUS_CONFIG[key];
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => void handleBulkStatusChange(key)}
+                        className="flex w-full items-center gap-2 px-3 py-2 text-[11px] font-semibold transition hover:bg-gray-50"
+                      >
+                        <span className="h-2 w-2 flex-shrink-0 rounded-full" style={{ backgroundColor: cfg.color }} />
+                        <span style={{ color: cfg.color }}>{cfg.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Накладные */}
+            <button
+              type="button"
+              disabled={bulkLoading}
+              onClick={() => void handleBulkExcel()}
+              className="flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-wait disabled:opacity-60"
+            >
+              <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
+                <rect x="1.5" y="1" width="8" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.3"/>
+                <path d="M3.5 5.5h4M3.5 7.5h2.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                <path d="M7 1.5V4l1.5-1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              {bulkLoading ? "Загрузка…" : "Накладные"}
+            </button>
+
+            {/* Снять выбор */}
+            <button
+              type="button"
+              onClick={() => setSelectedIds(new Set())}
+              className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-500 transition hover:border-red-200 hover:text-red-500"
+            >
+              Снять выбор
+            </button>
+          </div>
+        )}
+
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1100px] text-sm">
             <thead className="bg-[#fff8f6] text-xs uppercase tracking-[0.14em] text-gray-500">
               <tr>
+                <th className="w-10 px-4 py-4 text-center">
+                  <IndeterminateCheckbox
+                    checked={allVisibleSelected}
+                    indeterminate={someSelected && !allVisibleSelected}
+                    onChange={toggleSelectAll}
+                    className="h-4 w-4 cursor-pointer rounded border-gray-300 accent-[#EEA391]"
+                  />
+                </th>
                 <th className="px-5 py-4 text-left">Заказ</th>
                 <th className="px-5 py-4 text-left">Клиент</th>
                 <th className="px-5 py-4 text-left">Телефон</th>
@@ -635,14 +829,25 @@ export default function AdminOrdersPageContent() {
               {loading ? (
                 Array.from({ length: 5 }, (_, index) => (
                   <tr key={index} className="animate-pulse">
-                    <td colSpan={9} className="px-5 py-5">
+                    <td colSpan={10} className="px-5 py-5">
                       <div className="h-12 rounded-2xl bg-gray-100" />
                     </td>
                   </tr>
                 ))
               ) : filteredOrders.length > 0 ? (
                 filteredOrders.map((order) => (
-                  <tr key={order.id} className="transition hover:bg-[#fffaf8]">
+                  <tr
+                    key={order.id}
+                    className={`transition hover:bg-[#fffaf8] ${selectedIds.has(String(order.id)) ? "bg-[#fff3f0]" : ""}`}
+                  >
+                    <td className="w-10 px-4 py-4 text-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(String(order.id))}
+                        onChange={() => toggleSelectOne(String(order.id))}
+                        className="h-4 w-4 cursor-pointer rounded border-gray-300 accent-[#EEA391]"
+                      />
+                    </td>
                     <td className="px-5 py-4 font-semibold text-gray-950">
                       {order.orderNumber}
                     </td>
@@ -715,7 +920,7 @@ export default function AdminOrdersPageContent() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={9} className="px-5 py-16 text-center">
+                  <td colSpan={10} className="px-5 py-16 text-center">
                     <p className="text-lg font-bold text-gray-950">Заказы не найдены</p>
                     <p className="mt-2 text-sm text-gray-500">
                       Новые заказы появятся здесь.
