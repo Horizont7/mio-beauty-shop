@@ -14,10 +14,10 @@ type ProductSummary = {
 };
 
 type OrderSummary = {
-  id: string;
+  id: string | number;
   customer_name: string | null;
-  total_price: number | null;
-  status: string | null;
+  total: number;
+  status: string;
   created_at: string | null;
 };
 
@@ -26,6 +26,8 @@ type DashboardState = {
   orders: OrderSummary[];
   productError: string;
   orderError: string;
+  orderCount: number;
+  revenue: number;
   customerCount: number;
   customerError: string;
 };
@@ -35,6 +37,8 @@ const initialState: DashboardState = {
   orders: [],
   productError: "",
   orderError: "",
+  orderCount: 0,
+  revenue: 0,
   customerCount: 0,
   customerError: "",
 };
@@ -50,7 +54,7 @@ export default function AdminPage() {
   useEffect(() => {
     async function loadDashboard() {
       setLoading(true);
-      const [productsResult, ordersResult, customersResult] =
+      const [productsResult, modernOrdersResult, customersResult] =
         await Promise.all([
           supabase
             .from("products")
@@ -58,19 +62,51 @@ export default function AdminPage() {
             .order("id", { ascending: false }),
           supabase
             .from("orders")
-            .select("id,customer_name,total_price,status,created_at")
-            .order("created_at", { ascending: false })
-            .limit(10),
+            .select("id,customer_name,total,order_status,created_at")
+            .order("created_at", { ascending: false }),
           supabase
             .from("customers")
             .select("id", { count: "exact", head: true }),
         ]);
 
+      let orders: OrderSummary[] = [];
+      let orderError = "";
+
+      if (!modernOrdersResult.error) {
+        orders = (modernOrdersResult.data || []).map((order) => ({
+          id: order.id,
+          customer_name: order.customer_name,
+          total: Number(order.total || 0),
+          status: order.order_status || "new",
+          created_at: order.created_at,
+        }));
+      } else {
+        const legacyOrdersResult = await supabase
+          .from("orders")
+          .select("id,customer_name,total_price,status,created_at")
+          .order("created_at", { ascending: false });
+
+        if (legacyOrdersResult.error) {
+          orderError =
+            legacyOrdersResult.error.message || modernOrdersResult.error.message;
+        } else {
+          orders = (legacyOrdersResult.data || []).map((order) => ({
+            id: order.id,
+            customer_name: order.customer_name,
+            total: Number(order.total_price || 0),
+            status: order.status || "new",
+            created_at: order.created_at,
+          }));
+        }
+      }
+
       setState({
         products: (productsResult.data || []) as ProductSummary[],
-        orders: (ordersResult.data || []) as OrderSummary[],
+        orders,
         productError: productsResult.error?.message || "",
-        orderError: ordersResult.error?.message || "",
+        orderError,
+        orderCount: orders.length,
+        revenue: orders.reduce((sum, order) => sum + order.total, 0),
         customerCount: customersResult.count || 0,
         customerError: customersResult.error?.message || "",
       });
@@ -85,16 +121,12 @@ export default function AdminPage() {
     (product) => (product.stock ?? 0) <= 5
   );
   const newOrders = state.orders.filter((order) => order.status === "new");
-  const salesTotal = state.orders.reduce(
-    (sum, order) => sum + (order.total_price || 0),
-    0
-  );
   const stats = [
     { label: "Total products", value: state.products.length },
     { label: "Active products", value: activeProducts.length },
-    { label: "Orders", value: state.orders.length },
+    { label: "Orders", value: state.orderCount },
     { label: "Customers", value: state.customerCount },
-    { label: "Sales summary", value: salesTotal.toLocaleString("ru-RU") },
+    { label: "Sales summary", value: state.revenue.toLocaleString("ru-RU") },
   ];
 
   return (

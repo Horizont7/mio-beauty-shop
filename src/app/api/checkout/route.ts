@@ -46,6 +46,11 @@ type PreparedOrderItem = {
   total_price: number;
 };
 
+type CreatedOrder = {
+  orderId: number;
+  orderNumber: string;
+};
+
 type SupabaseLikeError = {
   code?: string;
   message?: string;
@@ -332,7 +337,10 @@ async function insertOrderWithItems({
     );
 
     if (!modernItemsError) {
-      return modernOrderResult.data.order_number || orderNumber;
+      return {
+        orderId: modernOrderResult.data.id,
+        orderNumber: modernOrderResult.data.order_number || orderNumber,
+      };
     }
 
     logCheckoutError("modern order_items insert failed", modernItemsError, {
@@ -347,7 +355,10 @@ async function insertOrderWithItems({
         : productSkuItemsResult;
 
       if (!legacyItemsForModernOrderResult.error) {
-        return modernOrderResult.data.order_number || orderNumber;
+        return {
+          orderId: modernOrderResult.data.id,
+          orderNumber: modernOrderResult.data.order_number || orderNumber,
+        };
       }
 
       logCheckoutError(
@@ -407,7 +418,86 @@ async function insertOrderWithItems({
     throw new CheckoutError("database_error", "Database insert failed.", 500);
   }
 
-  return orderNumber;
+  return {
+    orderId: legacyOrderResult.data.id,
+    orderNumber,
+  };
+}
+
+async function syncCustomerAfterCheckout({
+  supabase,
+  customerName,
+  phone,
+  address,
+  total,
+}: {
+  supabase: ReturnType<typeof createSupabaseAdminClient>;
+  customerName: string;
+  phone: string;
+  address: string;
+  total: number;
+}) {
+  const { data: existingCustomer, error: lookupError } = await supabase
+    .from("customers")
+    .select("id,orders_count,total_spent")
+    .eq("phone", phone)
+    .order("id", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (lookupError) {
+    logCheckoutError("customer lookup failed", lookupError, { phone });
+    return null;
+  }
+
+  if (existingCustomer) {
+    const { error: updateError } = await supabase
+      .from("customers")
+      .update({
+        name: customerName,
+        address,
+        orders_count: Number(existingCustomer.orders_count || 0) + 1,
+        total_spent: Number(existingCustomer.total_spent || 0) + total,
+      })
+      .eq("id", existingCustomer.id);
+
+    if (updateError) {
+      logCheckoutError("customer update failed", updateError, {
+        customerId: existingCustomer.id,
+      });
+    }
+    return updateError ? null : existingCustomer.id;
+  }
+
+  const { error: insertError } = await supabase.from("customers").insert({
+    name: customerName,
+    phone,
+    address,
+    orders_count: 1,
+    total_spent: total,
+  });
+
+  if (insertError) {
+    logCheckoutError("customer insert failed", insertError, { phone });
+    return null;
+  }
+
+  const { data: insertedCustomer, error: insertedCustomerError } = await supabase
+    .from("customers")
+    .select("id")
+    .eq("phone", phone)
+    .order("id", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (insertedCustomerError) {
+    logCheckoutError("created customer lookup failed", insertedCustomerError, {
+      phone,
+    });
+    return null;
+  }
+
+  return insertedCustomer?.id ?? null;
 }
 
 export async function POST(request: NextRequest) {
@@ -565,13 +655,13 @@ export async function POST(request: NextRequest) {
     const deliveryPrice = 0;
     const total = subtotal + deliveryPrice;
 
-    let finalOrderNumber = "";
+    let createdOrder: CreatedOrder | null = null;
 
     for (let attempt = 1; attempt <= 3; attempt += 1) {
       const orderNumber = makeOrderNumber();
 
       try {
-        finalOrderNumber = await insertOrderWithItems({
+        createdOrder = await insertOrderWithItems({
           supabase,
           orderNumber,
           customerName,
@@ -599,17 +689,39 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    if (!finalOrderNumber) {
+    if (!createdOrder) {
       throw new CheckoutError("database_error", "Could not create a unique order.", 500);
     }
 
+    const customerId = await syncCustomerAfterCheckout({
+      supabase,
+      customerName,
+      phone,
+      address,
+      total,
+    });
+
+    if (customerId) {
+      const { error: customerLinkError } = await supabase
+        .from("orders")
+        .update({ customer_id: customerId })
+        .eq("id", createdOrder.orderId);
+
+      if (customerLinkError && !isSchemaCacheError(customerLinkError)) {
+        logCheckoutError("order customer link failed", customerLinkError, {
+          orderId: createdOrder.orderId,
+          customerId,
+        });
+      }
+    }
+
     console.info("[checkout] order created", {
-      orderNumber: finalOrderNumber,
+      orderNumber: createdOrder.orderNumber,
       itemCount: orderItems.length,
       total,
     });
 
-    return NextResponse.json({ orderNumber: finalOrderNumber });
+    return NextResponse.json({ orderNumber: createdOrder.orderNumber });
   } catch (error) {
     logCheckoutError("request failed", error);
 

@@ -67,6 +67,8 @@ function statusOptionsFor(order: OrderRow) {
     : ["new", "accepted", "packing", "delivering", "completed", "cancelled"];
 }
 
+const paymentStatusOptions = ["pending", "paid", "cancelled"];
+
 function normalizeModernOrder(row: Record<string, unknown>): OrderRow {
   return {
     id: textValue(row.id) || Number(row.id),
@@ -214,6 +216,28 @@ export default function AdminOrdersPageContent() {
     setSelectedOrder((current) =>
       current && current.id === order.id
         ? { ...current, orderStatus: nextStatus }
+        : current
+    );
+  }
+
+  async function updatePaymentStatus(order: OrderRow, nextStatus: string) {
+    if (order.schema !== "modern") return;
+
+    const { error: updateError } = await supabase
+      .from("orders")
+      .update({ payment_status: nextStatus })
+      .eq("id", order.id);
+
+    if (updateError) {
+      showToast("error", updateError.message);
+      return;
+    }
+
+    showToast("success", "Payment status updated.");
+    await loadOrders();
+    setSelectedOrder((current) =>
+      current && current.id === order.id
+        ? { ...current, paymentStatus: nextStatus }
         : current
     );
   }
@@ -424,7 +448,23 @@ export default function AdminOrdersPageContent() {
                       {formatPrice(order.total)}
                     </td>
                     <td className="px-5 py-4 text-gray-700">
-                      {order.paymentStatus}
+                      {order.schema === "modern" ? (
+                        <select
+                          value={order.paymentStatus}
+                          onChange={(event) =>
+                            void updatePaymentStatus(order, event.target.value)
+                          }
+                          className="rounded-xl border border-gray-200 px-3 py-2 text-xs font-bold text-gray-700 outline-none focus:border-[#EEA391]"
+                        >
+                          {paymentStatusOptions.map((status) => (
+                            <option key={status} value={status}>
+                              {status}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        order.paymentStatus
+                      )}
                     </td>
                     <td className="px-5 py-4">
                       <select

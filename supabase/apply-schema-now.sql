@@ -118,6 +118,25 @@ create index if not exists orders_order_number_idx on public.orders (order_numbe
 create index if not exists orders_customer_phone_idx on public.orders (customer_phone);
 create index if not exists orders_created_at_idx on public.orders (created_at desc);
 
+alter table public.orders
+  add column if not exists customer_id bigint,
+  add column if not exists phone text,
+  add column if not exists address text,
+  add column if not exists total_price numeric default 0,
+  add column if not exists status text default 'new',
+  add column if not exists delivery_method text,
+  add column if not exists order_number text,
+  add column if not exists customer_phone text,
+  add column if not exists customer_city text,
+  add column if not exists customer_address text,
+  add column if not exists customer_comment text,
+  add column if not exists payment_status text default 'pending',
+  add column if not exists order_status text default 'new',
+  add column if not exists subtotal numeric default 0,
+  add column if not exists delivery_price numeric default 0,
+  add column if not exists total numeric default 0,
+  add column if not exists updated_at timestamptz default now();
+
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- 7.  ORDER_ITEMS
@@ -140,6 +159,14 @@ create table if not exists public.order_items (
 
 create index if not exists order_items_order_id_idx on public.order_items (order_id);
 
+alter table public.order_items
+  add column if not exists product_sku text,
+  add column if not exists product_image text,
+  add column if not exists sku text,
+  add column if not exists unit_price numeric default 0,
+  add column if not exists price numeric default 0,
+  add column if not exists total_price numeric default 0;
+
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- 8.  REVIEWS
@@ -157,6 +184,12 @@ create table if not exists public.reviews (
 
 create index if not exists reviews_product_active_created_idx
   on public.reviews (product_id, active, created_at desc);
+
+alter table public.reviews
+  add column if not exists text text,
+  add column if not exists status text default 'pending',
+  add column if not exists comment text,
+  add column if not exists active boolean default false;
 
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -201,6 +234,12 @@ create table if not exists public.product_images (
 create index if not exists product_images_product_sort_idx
   on public.product_images (product_id, sort_order, id);
 
+alter table public.product_images
+  add column if not exists image_url text,
+  add column if not exists url text,
+  add column if not exists path text,
+  add column if not exists active boolean default true;
+
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- 11. BRANDS
@@ -230,6 +269,43 @@ create table if not exists public.customers (
   total_spent  numeric default 0,
   created_at   timestamptz not null default now()
 );
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'orders_customer_id_fkey'
+      and conrelid = 'public.orders'::regclass
+  ) then
+    alter table public.orders
+      add constraint orders_customer_id_fkey
+      foreign key (customer_id)
+      references public.customers(id)
+      on delete set null
+      not valid;
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'products_category_id_fkey'
+      and conrelid = 'public.products'::regclass
+  ) then
+    alter table public.products
+      add constraint products_category_id_fkey
+      foreign key (category_id)
+      references public.categories(id)
+      on delete set null
+      not valid;
+  end if;
+end $$;
+
+revoke all on table public.orders from anon;
+revoke all on table public.order_items from anon;
+revoke all on table public.customers from anon;
+
+grant select, insert, update, delete on table public.orders to authenticated;
+grant select, insert, update, delete on table public.order_items to authenticated;
+grant select, insert, update, delete on table public.customers to authenticated;
 
 
 -- ─────────────────────────────────────────────────────────────────────────────

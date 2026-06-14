@@ -304,7 +304,7 @@ export async function getActiveReviewsByProductId(productId: number) {
   const ninetyDaysAgo = new Date();
   ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
 
-  const { data, error } = await supabase
+  const modernResult = await supabase
     .from("reviews")
     .select("id,product_id,customer_name,rating,comment,active,created_at")
     .eq("product_id", productId)
@@ -312,15 +312,35 @@ export async function getActiveReviewsByProductId(productId: number) {
     .gte("created_at", ninetyDaysAgo.toISOString())
     .order("created_at", { ascending: false });
 
-  if (error) {
-    if (error.message.includes("reviews")) return [];
+  if (!modernResult.error) {
+    return (modernResult.data || []) as ProductReview[];
+  }
+
+  const legacyResult = await supabase
+    .from("reviews")
+    .select("id,product_id,customer_name,rating,text,status,created_at")
+    .eq("product_id", productId)
+    .eq("status", "approved")
+    .gte("created_at", ninetyDaysAgo.toISOString())
+    .order("created_at", { ascending: false });
+
+  if (legacyResult.error) {
+    if (legacyResult.error.message.includes("reviews")) return [];
     console.error("PRODUCT_PAGE_ERROR", {
       param: productId,
       query: "reviews.product_id",
-      error: error.message,
+      error: legacyResult.error.message,
     });
     return [];
   }
 
-  return (data || []) as ProductReview[];
+  return (legacyResult.data || []).map((review) => ({
+    id: review.id,
+    product_id: review.product_id,
+    customer_name: review.customer_name,
+    rating: review.rating,
+    comment: review.text,
+    active: review.status === "approved",
+    created_at: review.created_at,
+  })) as ProductReview[];
 }

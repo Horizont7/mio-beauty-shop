@@ -33,6 +33,8 @@ export type ResourceRow = Record<string, unknown> & {
   active?: boolean;
 };
 
+export type ResourceSchema = "primary" | "fallback";
+
 type AdminResourcePageProps = {
   title: string;
   description: string;
@@ -47,6 +49,16 @@ type AdminResourcePageProps = {
   allowEdit?: boolean;
   allowDelete?: boolean;
   allowActiveToggle?: boolean;
+  fallbackSelect?: string;
+  normalizeRow?: (row: ResourceRow, schema: ResourceSchema) => ResourceRow;
+  adaptPayload?: (
+    payload: Record<string, unknown>,
+    schema: ResourceSchema
+  ) => Record<string, unknown>;
+  activePayload?: (
+    row: ResourceRow,
+    schema: ResourceSchema
+  ) => Record<string, unknown>;
 };
 
 type ToastMessage = {
@@ -106,6 +118,10 @@ export default function AdminResourcePage({
   allowEdit = true,
   allowDelete = true,
   allowActiveToggle = true,
+  fallbackSelect,
+  normalizeRow,
+  adaptPayload,
+  activePayload,
 }: AdminResourcePageProps) {
   const [rows, setRows] = useState<ResourceRow[]>([]);
   const [form, setForm] = useState(() => emptyForm(fields));
@@ -116,6 +132,8 @@ export default function AdminResourcePage({
   const [pageLoading, setPageLoading] = useState(true);
   const [error, setError] = useState("");
   const [toast, setToast] = useState<ToastMessage | null>(null);
+  const [resourceSchema, setResourceSchema] =
+    useState<ResourceSchema>("primary");
 
   useEffect(() => {
     void loadRows();
@@ -131,21 +149,35 @@ export default function AdminResourcePage({
     setPageLoading(true);
     setError("");
 
-    let query = supabase.from(tableName).select(select);
-    if (orderBy) {
-      query = query.order(orderBy, { ascending: false, nullsFirst: false });
+    async function runQuery(selectedColumns: string) {
+      let query = supabase.from(tableName).select(selectedColumns);
+      if (orderBy) {
+        query = query.order(orderBy, { ascending: false, nullsFirst: false });
+      }
+      return query;
     }
 
-    const { data, error: loadError } = await query;
+    let schema: ResourceSchema = "primary";
+    let result = await runQuery(select);
 
-    if (loadError) {
+    if (result.error && fallbackSelect) {
+      schema = "fallback";
+      result = await runQuery(fallbackSelect);
+    }
+
+    if (result.error) {
       setRows([]);
-      setError(loadError.message);
+      setError(result.error.message);
       setPageLoading(false);
       return;
     }
 
-    setRows((data || []) as unknown as ResourceRow[]);
+    setResourceSchema(schema);
+    setRows(
+      ((result.data || []) as unknown as ResourceRow[]).map((row) =>
+        normalizeRow ? normalizeRow(row, schema) : row
+      )
+    );
     setPageLoading(false);
   }
 
@@ -184,7 +216,10 @@ export default function AdminResourcePage({
     }
 
     setLoading(true);
-    const payload = buildPayload(fields, form);
+    const basePayload = buildPayload(fields, form);
+    const payload = adaptPayload
+      ? adaptPayload(basePayload, resourceSchema)
+      : basePayload;
     const result = editingId
       ? await supabase.from(tableName).update(payload).eq("id", editingId)
       : await supabase.from(tableName).insert([payload]);
@@ -224,9 +259,12 @@ export default function AdminResourcePage({
   async function toggleActive(row: ResourceRow) {
     if (!row.id) return;
 
+    const payload = activePayload
+      ? activePayload(row, resourceSchema)
+      : { active: !row.active };
     const { error: updateError } = await supabase
       .from(tableName)
-      .update({ active: !row.active })
+      .update(payload)
       .eq("id", row.id);
 
     if (updateError) {
