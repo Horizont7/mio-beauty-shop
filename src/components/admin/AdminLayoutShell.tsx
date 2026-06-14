@@ -14,10 +14,19 @@ type TopNavItem = {
   label: string;
   href?: string;
   links?: AdminLink[];
+  darkDropdown?: boolean;
 };
 
 const topNavItems: TopNavItem[] = [
-  { label: "Главная", href: "/admin" },
+  {
+    label: "Главная",
+    darkDropdown: true,
+    links: [
+      { href: "/admin/users", label: "Пользователи" },
+      { href: "/admin/reports", label: "Отчёты" },
+      { href: "/admin/sales-dashboard", label: "Дашборд по продажам" },
+    ],
+  },
   {
     label: "Продажи",
     links: [
@@ -130,11 +139,11 @@ export default function AdminLayoutShell({
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const shellRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     function closeMenus(event: MouseEvent) {
-      if (!shellRef.current?.contains(event.target as Node)) {
+      if (!headerRef.current?.contains(event.target as Node)) {
         setOpenMenu(null);
         setSearchOpen(false);
       }
@@ -162,6 +171,10 @@ export default function AdminLayoutShell({
   }
 
   function isGroupActive(item: TopNavItem) {
+    if (item.label === "Главная" && pathname === "/admin") {
+      return true;
+    }
+
     return item.href
       ? isRouteActive(item.href)
       : item.links?.some((link) => isRouteActive(link.href));
@@ -180,8 +193,8 @@ export default function AdminLayoutShell({
     : searchableLinks;
 
   return (
-    <div ref={shellRef} className="min-h-screen bg-[#f7f4f2] pt-[68px]">
-      <header className="fixed inset-x-0 top-0 z-50 h-[68px] border-b border-white/10 bg-[#211e1d] text-white shadow-[0_8px_30px_rgba(40,24,20,0.16)]">
+    <div className="min-h-screen bg-[#f7f4f2] pt-[68px]">
+      <header ref={headerRef} className="fixed inset-x-0 top-0 z-50 h-[68px] border-b border-white/10 bg-[#211e1d] text-white shadow-[0_8px_30px_rgba(40,24,20,0.16)]">
         <div className="flex h-full items-center px-4 lg:px-5">
           <Link href="/admin" className="group flex shrink-0 items-center gap-3 pr-5">
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#EEA391] text-sm font-black tracking-tight text-[#211e1d] shadow-lg shadow-[#EEA391]/15 transition group-hover:bg-[#f5b09f]">
@@ -218,10 +231,21 @@ export default function AdminLayoutShell({
 
               const menuOpen = openMenu === item.label;
               return (
-                <div key={item.label} className="relative h-full shrink-0">
+                <div
+                  key={item.label}
+                  className="relative h-full shrink-0"
+                  onMouseEnter={() => {
+                    setOpenMenu(item.label);
+                    setSearchOpen(false);
+                  }}
+                  onMouseLeave={() => setOpenMenu(null)}
+                >
                   <button
                     type="button"
-                    onClick={() => setOpenMenu(menuOpen ? null : item.label)}
+                    onClick={() => {
+                      setOpenMenu(item.label);
+                      setSearchOpen(false);
+                    }}
                     className={`flex h-full items-center gap-1 border-b-2 px-2.5 text-[13px] font-semibold transition 2xl:px-3.5 ${
                       active || menuOpen
                         ? "border-[#EEA391] bg-white/[0.06] text-white"
@@ -233,16 +257,26 @@ export default function AdminLayoutShell({
                     <ChevronDownIcon />
                   </button>
                   {menuOpen && (
-                    <div className="absolute left-0 top-[calc(100%+8px)] min-w-56 overflow-hidden rounded-2xl border border-[#eadbd6] bg-white p-2 text-[#302827] shadow-[0_18px_50px_rgba(44,29,25,0.22)]">
+                    <div
+                      className={`absolute left-0 top-full min-w-56 overflow-hidden rounded-b-2xl p-2 shadow-[0_18px_50px_rgba(44,29,25,0.28)] ${
+                        item.darkDropdown
+                          ? "border border-white/10 bg-[#292423] text-white"
+                          : "border border-[#eadbd6] bg-white text-[#302827]"
+                      }`}
+                    >
                       {item.links?.map((link) => (
                         <Link
                           key={link.href}
                           href={link.href}
                           onClick={closeNavigation}
                           className={`block rounded-xl px-3.5 py-2.5 text-sm font-semibold transition ${
-                            isRouteActive(link.href)
-                              ? "bg-[#fff0eb] text-[#a85343]"
-                              : "text-[#554b48] hover:bg-[#fff4f0] hover:text-[#a85343]"
+                            item.darkDropdown
+                              ? isRouteActive(link.href)
+                                ? "bg-[#EEA391] text-[#211e1d]"
+                                : "text-white/75 hover:bg-white/10 hover:text-white"
+                              : isRouteActive(link.href)
+                                ? "bg-[#fff0eb] text-[#a85343]"
+                                : "text-[#554b48] hover:bg-[#fff4f0] hover:text-[#a85343]"
                           }`}
                         >
                           {link.label}
