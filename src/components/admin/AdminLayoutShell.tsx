@@ -10,10 +10,16 @@ type AdminLink = {
   label: string;
 };
 
+type AdminLinkColumn = {
+  title: string;
+  links: AdminLink[];
+};
+
 type TopNavItem = {
   label: string;
   href?: string;
   links?: AdminLink[];
+  columns?: AdminLinkColumn[];
   darkDropdown?: boolean;
 };
 
@@ -24,14 +30,33 @@ const topNavItems: TopNavItem[] = [
     links: [
       { href: "/admin/users", label: "Пользователи" },
       { href: "/admin/reports", label: "Отчёты" },
-      { href: "/admin/sales-dashboard", label: "Дашборд по продажам" },
     ],
   },
   {
-    label: "Продажи",
-    links: [
-      { href: "/admin/orders", label: "Заказы" },
-      { href: "/admin/order-items", label: "Позиции заказов" },
+    label: "Продажа",
+    darkDropdown: true,
+    columns: [
+      {
+        title: "Продажа",
+        links: [
+          { href: "/admin/orders", label: "Заказы" },
+          { href: "/admin/orders/archive", label: "Архив заказов" },
+          { href: "/admin/orders/cancelled", label: "Отмененные заказы" },
+          { href: "/admin/returns", label: "Возвраты" },
+          { href: "/admin/leads", label: "Лиды" },
+        ],
+      },
+      {
+        title: "Отчеты по продажам",
+        links: [
+          { href: "/admin", label: "Дашборд" },
+          { href: "/admin/sales-dashboard", label: "Дашборд по продажам" },
+          {
+            href: "/admin/sales-report-builder",
+            label: "Конструктор отчетов по продажам",
+          },
+        ],
+      },
     ],
   },
   {
@@ -90,6 +115,9 @@ const searchableLinks: AdminLink[] = Array.from(
     [
       { href: "/admin", label: "Главная" },
       ...topNavItems.flatMap((item) => item.links ?? []),
+      ...topNavItems.flatMap((item) =>
+        item.columns?.flatMap((column) => column.links) ?? [],
+      ),
     ].map((link) => [link.href, link]),
   ).values(),
 );
@@ -177,7 +205,10 @@ export default function AdminLayoutShell({
 
     return item.href
       ? isRouteActive(item.href)
-      : item.links?.some((link) => isRouteActive(link.href));
+      : item.links?.some((link) => isRouteActive(link.href)) ||
+          item.columns?.some((column) =>
+            column.links.some((link) => isRouteActive(link.href)),
+          );
   }
 
   function closeNavigation() {
@@ -258,30 +289,58 @@ export default function AdminLayoutShell({
                   </button>
                   {menuOpen && (
                     <div
-                      className={`absolute left-0 top-full min-w-56 overflow-hidden rounded-b-2xl p-2 shadow-[0_18px_50px_rgba(44,29,25,0.28)] ${
+                      className={`absolute left-0 top-full overflow-hidden rounded-b-2xl p-2 shadow-[0_18px_50px_rgba(44,29,25,0.28)] ${
+                        item.columns ? "w-[580px]" : "min-w-56"
+                      } ${
                         item.darkDropdown
                           ? "border border-white/10 bg-[#292423] text-white"
                           : "border border-[#eadbd6] bg-white text-[#302827]"
                       }`}
                     >
-                      {item.links?.map((link) => (
-                        <Link
-                          key={link.href}
-                          href={link.href}
-                          onClick={closeNavigation}
-                          className={`block rounded-xl px-3.5 py-2.5 text-sm font-semibold transition ${
-                            item.darkDropdown
-                              ? isRouteActive(link.href)
-                                ? "bg-[#EEA391] text-[#211e1d]"
-                                : "text-white/75 hover:bg-white/10 hover:text-white"
-                              : isRouteActive(link.href)
-                                ? "bg-[#fff0eb] text-[#a85343]"
-                                : "text-[#554b48] hover:bg-[#fff4f0] hover:text-[#a85343]"
-                          }`}
-                        >
-                          {link.label}
-                        </Link>
-                      ))}
+                      {item.columns ? (
+                        <div className="grid grid-cols-2 divide-x divide-white/10">
+                          {item.columns.map((column) => (
+                            <div key={column.title} className="px-2 py-2 first:pr-4 last:pl-4">
+                              <p className="px-3.5 pb-2 pt-1 text-[11px] font-bold uppercase tracking-[0.18em] text-[#EEA391]">
+                                {column.title}
+                              </p>
+                              {column.links.map((link) => (
+                                <Link
+                                  key={link.href}
+                                  href={link.href}
+                                  onClick={closeNavigation}
+                                  className={`block rounded-xl px-3.5 py-2.5 text-sm font-semibold transition ${
+                                    isRouteActive(link.href)
+                                      ? "bg-[#EEA391] text-[#211e1d]"
+                                      : "text-white/75 hover:bg-white/10 hover:text-white"
+                                  }`}
+                                >
+                                  {link.label}
+                                </Link>
+                              ))}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        item.links?.map((link) => (
+                          <Link
+                            key={link.href}
+                            href={link.href}
+                            onClick={closeNavigation}
+                            className={`block rounded-xl px-3.5 py-2.5 text-sm font-semibold transition ${
+                              item.darkDropdown
+                                ? isRouteActive(link.href)
+                                  ? "bg-[#EEA391] text-[#211e1d]"
+                                  : "text-white/75 hover:bg-white/10 hover:text-white"
+                                : isRouteActive(link.href)
+                                  ? "bg-[#fff0eb] text-[#a85343]"
+                                  : "text-[#554b48] hover:bg-[#fff4f0] hover:text-[#a85343]"
+                            }`}
+                          >
+                            {link.label}
+                          </Link>
+                        ))
+                      )}
                     </div>
                   )}
                 </div>
