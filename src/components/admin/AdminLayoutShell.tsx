@@ -61,11 +61,17 @@ const topNavItems: TopNavItem[] = [
   },
   {
     label: "Склад",
-    links: [
-      { href: "/admin/products", label: "Товары" },
-      { href: "/admin/categories", label: "Категории" },
-      { href: "/admin/brands", label: "Бренды" },
-      { href: "/admin/products/import-images", label: "Импорт изображений" },
+    darkDropdown: true,
+    columns: [
+      {
+        title: "Документы",
+        links: [
+          { href: "/admin/products", label: "Закупки" },
+          { href: "/admin/categories", label: "Инвентаризации" },
+          { href: "/admin/brands", label: "Списания" },
+          { href: "/admin/products/import-images", label: "Остатки" },
+        ],
+      },
     ],
   },
   {
@@ -298,7 +304,13 @@ export default function AdminLayoutShell({
                       }`}
                     >
                       {item.columns ? (
-                        <div className="grid grid-cols-2 divide-x divide-white/10">
+                        <div
+                          className={`grid ${
+                            item.columns.length > 1
+                              ? "grid-cols-2 divide-x divide-white/10"
+                              : "grid-cols-1"
+                          }`}
+                        >
                           {item.columns.map((column) => (
                             <div key={column.title} className="px-2 py-2 first:pr-4 last:pl-4">
                               <p className="px-3.5 pb-2 pt-1 text-[11px] font-bold uppercase tracking-[0.18em] text-[#EEA391]">
