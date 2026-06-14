@@ -129,6 +129,15 @@ function normalizeLegacyItem(row: Record<string, unknown>): OrderItemRow {
   };
 }
 
+const STATUS_CONFIGS = [
+  { key: "processing", label: "В обработке", bg: "bg-orange-50", border: "border-orange-200", text: "text-orange-800", dot: "bg-orange-500", amount: "text-orange-600" },
+  { key: "new",        label: "В ожидании",  bg: "bg-purple-50", border: "border-purple-200", text: "text-purple-800", dot: "bg-purple-500", amount: "text-purple-600" },
+  { key: "shipped",    label: "Отгружен",    bg: "bg-blue-50",   border: "border-blue-200",   text: "text-blue-800",   dot: "bg-blue-500",   amount: "text-blue-600"   },
+  { key: "delivered",  label: "Доставлен",   bg: "bg-red-50",    border: "border-red-200",    text: "text-red-800",    dot: "bg-red-500",    amount: "text-red-600"    },
+  { key: "archive",    label: "Архив",       bg: "bg-gray-900",  border: "border-gray-700",   text: "text-white",      dot: "bg-gray-400",   amount: "text-gray-300"   },
+  { key: "cancelled",  label: "Отменен",     bg: "bg-yellow-50", border: "border-yellow-200", text: "text-yellow-800", dot: "bg-yellow-500", amount: "text-yellow-600" },
+] as const;
+
 export default function AdminOrdersPageContent() {
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [items, setItems] = useState<OrderItemRow[]>([]);
@@ -363,6 +372,29 @@ export default function AdminOrdersPageContent() {
     );
   }, [orders, search]);
 
+  const summary = useMemo(() => {
+    let totalAmount = 0;
+    const byStatus: Record<string, { count: number; amount: number }> = {};
+    let paidCount = 0, paidAmount = 0, unpaidCount = 0, unpaidAmount = 0;
+
+    for (const o of orders) {
+      totalAmount += o.total;
+      const s = o.orderStatus || "new";
+      if (!byStatus[s]) byStatus[s] = { count: 0, amount: 0 };
+      byStatus[s].count++;
+      byStatus[s].amount += o.total;
+      if (o.paymentStatus === "paid") {
+        paidCount++;
+        paidAmount += o.total;
+      } else {
+        unpaidCount++;
+        unpaidAmount += o.total;
+      }
+    }
+
+    return { totalCount: orders.length, totalAmount, byStatus, paidCount, paidAmount, unpaidCount, unpaidAmount };
+  }, [orders]);
+
   return (
     <div className="space-y-6">
       {toast && (
@@ -375,14 +407,86 @@ export default function AdminOrdersPageContent() {
         </div>
       )}
 
+      {/* ── Total Orders Card ── */}
       <section className="rounded-[28px] border border-white bg-white p-6 shadow-sm">
-        <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#B96C5C]">
-          MIO Beauty admin
-        </p>
-        <h1 className="mt-2 text-3xl font-bold text-gray-950">Orders</h1>
-        <p className="mt-2 text-sm text-gray-500">
-          View checkout records, order items and fulfillment status.
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#B96C5C]">MIO Beauty admin</p>
+            <h1 className="mt-1 text-3xl font-bold text-gray-950">Заказы</h1>
+          </div>
+          <div className="text-right">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gray-400">Всего заказов</p>
+            {loading ? (
+              <div className="mt-2 space-y-2">
+                <div className="ml-auto h-9 w-20 animate-pulse rounded-xl bg-gray-100" />
+                <div className="ml-auto h-4 w-36 animate-pulse rounded-xl bg-gray-100" />
+              </div>
+            ) : (
+              <>
+                <p className="mt-1 text-4xl font-bold text-gray-950">{summary.totalCount}</p>
+                <p className="mt-1 text-lg font-semibold text-gray-500">{formatPrice(summary.totalAmount)}</p>
+              </>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Status Summary Cards ── */}
+      <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        {STATUS_CONFIGS.map((cfg) => {
+          const stat = summary.byStatus[cfg.key] ?? { count: 0, amount: 0 };
+          return (
+            <div key={cfg.key} className={`rounded-[24px] border p-4 ${cfg.bg} ${cfg.border}`}>
+              <div className="flex items-center gap-1.5">
+                <span className={`h-2 w-2 flex-shrink-0 rounded-full ${cfg.dot}`} />
+                <span className={`text-[11px] font-bold leading-tight ${cfg.text}`}>{cfg.label}</span>
+              </div>
+              {loading ? (
+                <div className="mt-3 space-y-1.5">
+                  <div className="h-7 w-10 animate-pulse rounded-lg bg-white/30" />
+                  <div className="h-3 w-20 animate-pulse rounded-lg bg-white/20" />
+                </div>
+              ) : (
+                <>
+                  <p className={`mt-3 text-3xl font-bold ${cfg.text}`}>{stat.count}</p>
+                  <p className={`mt-0.5 text-xs font-medium ${cfg.amount}`}>{formatPrice(stat.amount)}</p>
+                </>
+              )}
+            </div>
+          );
+        })}
+      </section>
+
+      {/* ── Payment Summary Cards ── */}
+      <section className="grid grid-cols-2 gap-3">
+        <div className="rounded-[24px] border border-emerald-200 bg-emerald-50 p-5">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-emerald-700">Оплачено</p>
+          {loading ? (
+            <div className="mt-3 space-y-2">
+              <div className="h-8 w-16 animate-pulse rounded-xl bg-emerald-200/60" />
+              <div className="h-4 w-32 animate-pulse rounded-xl bg-emerald-200/40" />
+            </div>
+          ) : (
+            <>
+              <p className="mt-2 text-3xl font-bold text-emerald-800">{summary.paidCount}</p>
+              <p className="mt-1 text-sm font-semibold text-emerald-600">{formatPrice(summary.paidAmount)}</p>
+            </>
+          )}
+        </div>
+        <div className="rounded-[24px] border border-red-200 bg-red-50 p-5">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-red-700">Не оплачено</p>
+          {loading ? (
+            <div className="mt-3 space-y-2">
+              <div className="h-8 w-16 animate-pulse rounded-xl bg-red-200/60" />
+              <div className="h-4 w-32 animate-pulse rounded-xl bg-red-200/40" />
+            </div>
+          ) : (
+            <>
+              <p className="mt-2 text-3xl font-bold text-red-800">{summary.unpaidCount}</p>
+              <p className="mt-1 text-sm font-semibold text-red-600">{formatPrice(summary.unpaidAmount)}</p>
+            </>
+          )}
+        </div>
       </section>
 
       <section className="rounded-[28px] border border-white bg-white p-5 shadow-sm">
