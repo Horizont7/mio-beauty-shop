@@ -1,0 +1,98 @@
+"filename", "language", "JSON with Comments", "MS SQL", "TypeScript", "TypeScript JSX", "PostCSS", "Markdown", "JavaScript", "JSON", "comment", "blank", "total"
+"c:\Users\1234\Desktop\mio-beauty-shop\.claude\settings.local.json", "JSON", 0, 0, 0, 0, 0, 0, 0, 12, 0, 1, 13
+"c:\Users\1234\Desktop\mio-beauty-shop\README.md", "Markdown", 0, 0, 0, 0, 0, 23, 0, 0, 0, 14, 37
+"c:\Users\1234\Desktop\mio-beauty-shop\docs\admin-supabase-setup.sql", "MS SQL", 0, 187, 0, 0, 0, 0, 0, 0, 3, 21, 211
+"c:\Users\1234\Desktop\mio-beauty-shop\docs\production-security-report.md", "Markdown", 0, 0, 0, 0, 0, 43, 0, 0, 0, 14, 57
+"c:\Users\1234\Desktop\mio-beauty-shop\docs\security-rls-verification.sql", "MS SQL", 0, 25, 0, 0, 0, 0, 0, 0, 10, 6, 41
+"c:\Users\1234\Desktop\mio-beauty-shop\eslint.config.mjs", "JavaScript", 0, 0, 0, 0, 0, 0, 14, 0, 2, 3, 19
+"c:\Users\1234\Desktop\mio-beauty-shop\next.config.ts", "TypeScript", 0, 0, 57, 0, 0, 0, 0, 0, 0, 4, 61
+"c:\Users\1234\Desktop\mio-beauty-shop\package-lock.json", "JSON", 0, 0, 0, 0, 0, 0, 0, 7799, 0, 1, 7800
+"c:\Users\1234\Desktop\mio-beauty-shop\package.json", "JSON", 0, 0, 0, 0, 0, 0, 0, 32, 0, 1, 33
+"c:\Users\1234\Desktop\mio-beauty-shop\postcss.config.mjs", "JavaScript", 0, 0, 0, 0, 0, 0, 6, 0, 0, 2, 8
+"c:\Users\1234\Desktop\mio-beauty-shop\src\app\admin\banners\page.tsx", "TypeScript JSX", 0, 0, 0, 520, 0, 0, 0, 0, 2, 67, 589
+"c:\Users\1234\Desktop\mio-beauty-shop\src\app\admin\brands\page.tsx", "TypeScript JSX", 0, 0, 0, 26, 0, 0, 0, 0, 0, 2, 28
+"c:\Users\1234\Desktop\mio-beauty-shop\src\app\admin\categories\page.tsx", "TypeScript JSX", 0, 0, 0, 562, 0, 0, 0, 0, 2, 79, 643
+"c:\Users\1234\Desktop\mio-beauty-shop\src\app\admin\customers\page.tsx", "TypeScript JSX", 0, 0, 0, 31, 0, 0, 0, 0, 0, 2, 33
+"c:\Users\1234\Desktop\mio-beauty-shop\src\app\admin\delivery-settings\page.tsx", "TypeScript JSX", 0, 0, 0, 29, 0, 0, 0, 0, 0, 2, 31
+"c:\Users\1234\Desktop\mio-beauty-shop\src\app\admin\layout.tsx", "TypeScript JSX", 0, 0, 0, 13, 0, 0, 0, 0, 0, 2, 15
+"c:\Users\1234\Desktop\mio-beauty-shop\src\app\admin\login\page.tsx", "TypeScript JSX", 0, 0, 0, 96, 0, 0, 0, 0, 0, 14, 110
+"c:\Users\1234\Desktop\mio-beauty-shop\src\app\admin\order-items\page.tsx", "TypeScript JSX", 0, 0, 0, 32, 0, 0, 0, 0, 0, 2, 34
+"c:\Users\1234\Desktop\mio-beauty-shop\src\app\admin\orders\page.tsx", "TypeScript JSX", 0, 0, 0, 4, 0, 0, 0, 0, 0, 2, 6
+"c:\Users\1234\Desktop\mio-beauty-shop\src\app\admin\page.tsx", "TypeScript JSX", 0, 0, 0, 162, 0, 0, 0, 0, 0, 18, 180
+"c:\Users\1234\Desktop\mio-beauty-shop\src\app\admin\payment-settings\page.tsx", "TypeScript JSX", 0, 0, 0, 38, 0, 0, 0, 0, 0, 2, 40
+"c:\Users\1234\Desktop\mio-beauty-shop\src\app\admin\products\import-images\page.tsx", "TypeScript JSX", 0, 0, 0, 468, 0, 0, 0, 0, 0, 50, 518
+"c:\Users\1234\Desktop\mio-beauty-shop\src\app\admin\products\page.tsx", "TypeScript JSX", 0, 0, 0, 1837, 0, 0, 0, 0, 2, 176, 2015
+"c:\Users\1234\Desktop\mio-beauty-shop\src\app\admin\promotions\page.tsx", "TypeScript JSX", 0, 0, 0, 40, 0, 0, 0, 0, 0, 2, 42
+"c:\Users\1234\Desktop\mio-beauty-shop\src\app\admin\reviews\page.tsx", "TypeScript JSX", 0, 0, 0, 29, 0, 0, 0, 0, 0, 2, 31
+"c:\Users\1234\Desktop\mio-beauty-shop\src\app\admin\security\page.tsx", "TypeScript JSX", 0, 0, 0, 34, 0, 0, 0, 0, 0, 3, 37
+"c:\Users\1234\Desktop\mio-beauty-shop\src\app\admin\site-settings\page.tsx", "TypeScript JSX", 0, 0, 0, 35, 0, 0, 0, 0, 0, 2, 37
+"c:\Users\1234\Desktop\mio-beauty-shop\src\app\admin\users\page.tsx", "TypeScript JSX", 0, 0, 0, 34, 0, 0, 0, 0, 0, 2, 36
+"c:\Users\1234\Desktop\mio-beauty-shop\src\app\admin\video-highlights\page.tsx", "TypeScript JSX", 0, 0, 0, 630, 0, 0, 0, 0, 2, 67, 699
+"c:\Users\1234\Desktop\mio-beauty-shop\src\app\api\admin\apply-schema\route.ts", "TypeScript", 0, 0, 312, 0, 0, 0, 0, 0, 2, 10, 324
+"c:\Users\1234\Desktop\mio-beauty-shop\src\app\api\admin\auth\login\route.ts", "TypeScript", 0, 0, 83, 0, 0, 0, 0, 0, 0, 17, 100
+"c:\Users\1234\Desktop\mio-beauty-shop\src\app\api\admin\auth\logout\route.ts", "TypeScript", 0, 0, 32, 0, 0, 0, 0, 0, 1, 6, 39
+"c:\Users\1234\Desktop\mio-beauty-shop\src\app\api\admin\auth\session\route.ts", "TypeScript", 0, 0, 13, 0, 0, 0, 0, 0, 0, 3, 16
+"c:\Users\1234\Desktop\mio-beauty-shop\src\app\api\admin\ttn\route.ts", "TypeScript", 0, 0, 455, 0, 0, 0, 0, 0, 53, 72, 580
+"c:\Users\1234\Desktop\mio-beauty-shop\src\app\api\checkout\route.ts", "TypeScript", 0, 0, 539, 0, 0, 0, 0, 0, 0, 91, 630
+"c:\Users\1234\Desktop\mio-beauty-shop\src\app\b2b\page.tsx", "TypeScript JSX", 0, 0, 0, 34, 0, 0, 0, 0, 0, 3, 37
+"c:\Users\1234\Desktop\mio-beauty-shop\src\app\cart\page.tsx", "TypeScript JSX", 0, 0, 0, 14, 0, 0, 0, 0, 0, 3, 17
+"c:\Users\1234\Desktop\mio-beauty-shop\src\app\catalog\categories\page.tsx", "TypeScript JSX", 0, 0, 0, 71, 0, 0, 0, 0, 0, 6, 77
+"c:\Users\1234\Desktop\mio-beauty-shop\src\app\catalog\products\page.tsx", "TypeScript JSX", 0, 0, 0, 19, 0, 0, 0, 0, 0, 4, 23
+"c:\Users\1234\Desktop\mio-beauty-shop\src\app\category\[slug]\loading.tsx", "TypeScript JSX", 0, 0, 0, 26, 0, 0, 0, 0, 0, 2, 28
+"c:\Users\1234\Desktop\mio-beauty-shop\src\app\category\[slug]\page.tsx", "TypeScript JSX", 0, 0, 0, 43, 0, 0, 0, 0, 0, 7, 50
+"c:\Users\1234\Desktop\mio-beauty-shop\src\app\checkout\page.tsx", "TypeScript JSX", 0, 0, 0, 14, 0, 0, 0, 0, 0, 3, 17
+"c:\Users\1234\Desktop\mio-beauty-shop\src\app\checkout\success\page.tsx", "TypeScript JSX", 0, 0, 0, 37, 0, 0, 0, 0, 0, 4, 41
+"c:\Users\1234\Desktop\mio-beauty-shop\src\app\favorites\page.tsx", "TypeScript JSX", 0, 0, 0, 19, 0, 0, 0, 0, 0, 4, 23
+"c:\Users\1234\Desktop\mio-beauty-shop\src\app\globals.css", "PostCSS", 0, 0, 0, 0, 36, 0, 0, 0, 0, 5, 41
+"c:\Users\1234\Desktop\mio-beauty-shop\src\app\layout.tsx", "TypeScript JSX", 0, 0, 0, 47, 0, 0, 0, 0, 0, 3, 50
+"c:\Users\1234\Desktop\mio-beauty-shop\src\app\page.tsx", "TypeScript JSX", 0, 0, 0, 28, 0, 0, 0, 0, 0, 4, 32
+"c:\Users\1234\Desktop\mio-beauty-shop\src\app\product\[slug]\page.tsx", "TypeScript JSX", 0, 0, 0, 108, 0, 0, 0, 0, 0, 12, 120
+"c:\Users\1234\Desktop\mio-beauty-shop\src\app\profile\page.tsx", "TypeScript JSX", 0, 0, 0, 30, 0, 0, 0, 0, 0, 3, 33
+"c:\Users\1234\Desktop\mio-beauty-shop\src\app\robots.ts", "TypeScript", 0, 0, 13, 0, 0, 0, 0, 0, 0, 3, 16
+"c:\Users\1234\Desktop\mio-beauty-shop\src\app\sitemap.ts", "TypeScript", 0, 0, 26, 0, 0, 0, 0, 0, 0, 6, 32
+"c:\Users\1234\Desktop\mio-beauty-shop\src\components\CartPageContent.tsx", "TypeScript JSX", 0, 0, 0, 156, 0, 0, 0, 0, 0, 8, 164
+"c:\Users\1234\Desktop\mio-beauty-shop\src\components\CatalogProductsContent.tsx", "TypeScript JSX", 0, 0, 0, 170, 0, 0, 0, 0, 0, 16, 186
+"c:\Users\1234\Desktop\mio-beauty-shop\src\components\CategoryPageContent.tsx", "TypeScript JSX", 0, 0, 0, 146, 0, 0, 0, 0, 0, 13, 159
+"c:\Users\1234\Desktop\mio-beauty-shop\src\components\CheckoutPageContent.tsx", "TypeScript JSX", 0, 0, 0, 176, 0, 0, 0, 0, 0, 20, 196
+"c:\Users\1234\Desktop\mio-beauty-shop\src\components\FavoritesPageContent.tsx", "TypeScript JSX", 0, 0, 0, 43, 0, 0, 0, 0, 0, 5, 48
+"c:\Users\1234\Desktop\mio-beauty-shop\src\components\HomePageContent.tsx", "TypeScript JSX", 0, 0, 0, 896, 0, 0, 0, 0, 0, 60, 956
+"c:\Users\1234\Desktop\mio-beauty-shop\src\components\LuxuryFooter.tsx", "TypeScript JSX", 0, 0, 0, 72, 0, 0, 0, 0, 0, 8, 80
+"c:\Users\1234\Desktop\mio-beauty-shop\src\components\MobileBottomNavigation.tsx", "TypeScript JSX", 0, 0, 0, 65, 0, 0, 0, 0, 0, 6, 71
+"c:\Users\1234\Desktop\mio-beauty-shop\src\components\ProductCard.tsx", "TypeScript JSX", 0, 0, 0, 156, 0, 0, 0, 0, 0, 12, 168
+"c:\Users\1234\Desktop\mio-beauty-shop\src\components\ProductDetailContent.tsx", "TypeScript JSX", 0, 0, 0, 394, 0, 0, 0, 0, 0, 25, 419
+"c:\Users\1234\Desktop\mio-beauty-shop\src\components\SiteHeader.tsx", "TypeScript JSX", 0, 0, 0, 184, 0, 0, 0, 0, 0, 10, 194
+"c:\Users\1234\Desktop\mio-beauty-shop\src\components\VideoHighlightsSection.tsx", "TypeScript JSX", 0, 0, 0, 151, 0, 0, 0, 0, 0, 9, 160
+"c:\Users\1234\Desktop\mio-beauty-shop\src\components\admin\AdminAuthGuard.tsx", "TypeScript JSX", 0, 0, 0, 64, 0, 0, 0, 0, 0, 15, 79
+"c:\Users\1234\Desktop\mio-beauty-shop\src\components\admin\AdminLayoutShell.tsx", "TypeScript JSX", 0, 0, 0, 92, 0, 0, 0, 0, 0, 10, 102
+"c:\Users\1234\Desktop\mio-beauty-shop\src\components\admin\AdminOrdersPageContent.tsx", "TypeScript JSX", 0, 0, 0, 562, 0, 0, 0, 0, 1, 52, 615
+"c:\Users\1234\Desktop\mio-beauty-shop\src\components\admin\AdminResourcePage.tsx", "TypeScript JSX", 0, 0, 0, 438, 0, 0, 0, 0, 1, 49, 488
+"c:\Users\1234\Desktop\mio-beauty-shop\src\lib\admin\auth.ts", "TypeScript", 0, 0, 82, 0, 0, 0, 0, 0, 0, 16, 98
+"c:\Users\1234\Desktop\mio-beauty-shop\src\lib\banners.ts", "TypeScript", 0, 0, 23, 0, 0, 0, 0, 0, 0, 5, 28
+"c:\Users\1234\Desktop\mio-beauty-shop\src\lib\brand.ts", "TypeScript", 0, 0, 49, 0, 0, 0, 0, 0, 0, 6, 55
+"c:\Users\1234\Desktop\mio-beauty-shop\src\lib\categories.ts", "TypeScript", 0, 0, 43, 0, 0, 0, 0, 0, 0, 9, 52
+"c:\Users\1234\Desktop\mio-beauty-shop\src\lib\checkout.ts", "TypeScript", 0, 0, 78, 0, 0, 0, 0, 0, 0, 15, 93
+"c:\Users\1234\Desktop\mio-beauty-shop\src\lib\commerce.tsx", "TypeScript JSX", 0, 0, 0, 160, 0, 0, 0, 0, 0, 25, 185
+"c:\Users\1234\Desktop\mio-beauty-shop\src\lib\image-optimization.ts", "TypeScript", 0, 0, 83, 0, 0, 0, 0, 0, 0, 19, 102
+"c:\Users\1234\Desktop\mio-beauty-shop\src\lib\language.tsx", "TypeScript JSX", 0, 0, 0, 82, 0, 0, 0, 0, 0, 20, 102
+"c:\Users\1234\Desktop\mio-beauty-shop\src\lib\localized-data.ts", "TypeScript", 0, 0, 56, 0, 0, 0, 0, 0, 0, 8, 64
+"c:\Users\1234\Desktop\mio-beauty-shop\src\lib\products.ts", "TypeScript", 0, 0, 281, 0, 0, 0, 0, 0, 0, 46, 327
+"c:\Users\1234\Desktop\mio-beauty-shop\src\lib\security\admin-session.ts", "TypeScript", 0, 0, 101, 0, 0, 0, 0, 0, 0, 29, 130
+"c:\Users\1234\Desktop\mio-beauty-shop\src\lib\security\rate-limit.ts", "TypeScript", 0, 0, 36, 0, 0, 0, 0, 0, 0, 9, 45
+"c:\Users\1234\Desktop\mio-beauty-shop\src\lib\supabase-admin.ts", "TypeScript", 0, 0, 18, 0, 0, 0, 0, 0, 0, 5, 23
+"c:\Users\1234\Desktop\mio-beauty-shop\src\lib\supabase.ts", "TypeScript", 0, 0, 14, 0, 0, 0, 0, 0, 0, 5, 19
+"c:\Users\1234\Desktop\mio-beauty-shop\src\lib\translations.ts", "TypeScript", 0, 0, 398, 0, 0, 0, 0, 0, 0, 4, 402
+"c:\Users\1234\Desktop\mio-beauty-shop\src\lib\ttn-print.ts", "TypeScript", 0, 0, 277, 0, 0, 0, 0, 0, 0, 7, 284
+"c:\Users\1234\Desktop\mio-beauty-shop\src\lib\video-highlights.ts", "TypeScript", 0, 0, 42, 0, 0, 0, 0, 0, 0, 9, 51
+"c:\Users\1234\Desktop\mio-beauty-shop\src\proxy.ts", "TypeScript", 0, 0, 96, 0, 0, 0, 0, 0, 0, 23, 119
+"c:\Users\1234\Desktop\mio-beauty-shop\supabase\apply-schema-now.sql", "MS SQL", 0, 349, 0, 0, 0, 0, 0, 0, 83, 93, 525
+"c:\Users\1234\Desktop\mio-beauty-shop\supabase\migrations\20260610000000_add_banner_text_fields.sql", "MS SQL", 0, 3, 0, 0, 0, 0, 0, 0, 0, 1, 4
+"c:\Users\1234\Desktop\mio-beauty-shop\supabase\migrations\20260610001000_add_bilingual_fields.sql", "MS SQL", 0, 19, 0, 0, 0, 0, 0, 0, 0, 3, 22
+"c:\Users\1234\Desktop\mio-beauty-shop\supabase\migrations\20260611000000_create_video_highlights.sql", "MS SQL", 0, 45, 0, 0, 0, 0, 0, 0, 0, 6, 51
+"c:\Users\1234\Desktop\mio-beauty-shop\supabase\migrations\20260612000000_admin_security_rls.sql", "MS SQL", 0, 225, 0, 0, 0, 0, 0, 0, 0, 13, 238
+"c:\Users\1234\Desktop\mio-beauty-shop\supabase\migrations\20260612001000_phase2_commerce.sql", "MS SQL", 0, 147, 0, 0, 0, 0, 0, 0, 0, 14, 161
+"c:\Users\1234\Desktop\mio-beauty-shop\supabase\migrations\20260612002000_enterprise_security_hardening.sql", "MS SQL", 0, 80, 0, 0, 0, 0, 0, 0, 0, 13, 93
+"c:\Users\1234\Desktop\mio-beauty-shop\supabase\migrations\20260612003000_public_shop_admin_lockdown.sql", "MS SQL", 0, 65, 0, 0, 0, 0, 0, 0, 0, 9, 74
+"c:\Users\1234\Desktop\mio-beauty-shop\supabase\migrations\20260612004000_product_images_schema.sql", "MS SQL", 0, 27, 0, 0, 0, 0, 0, 0, 0, 6, 33
+"c:\Users\1234\Desktop\mio-beauty-shop\supabase\migrations\20260612005000_add_product_usage_ingredients.sql", "MS SQL", 0, 5, 0, 0, 0, 0, 0, 0, 0, 1, 6
+"c:\Users\1234\Desktop\mio-beauty-shop\tsconfig.json", "JSON with Comments", 34, 0, 0, 0, 0, 0, 0, 0, 0, 1, 35
+"Total", "-", 34, 1177, 3207, 9117, 36, 66, 20, 7843, 164, 1572, 23236
