@@ -76,9 +76,21 @@ const topNavItems: TopNavItem[] = [
   },
   {
     label: "Финансы",
-    links: [
-      { href: "/admin/payment-settings", label: "Платежи" },
-      { href: "/admin/delivery-settings", label: "Доставка" },
+    darkDropdown: true,
+    columns: [
+      {
+        title: "Основное",
+        links: [
+          {
+            href: "/admin/finance/cash-documents",
+            label: "Кассовые документы",
+          },
+          { href: "/admin/payments", label: "Оплаты от клиентов" },
+          { href: "/admin/finance/expenses", label: "Расходы" },
+          { href: "/admin/finance/cashbox", label: "Касса" },
+          { href: "/admin/payment-settings", label: "Способы оплаты" },
+        ],
+      },
     ],
   },
   {
