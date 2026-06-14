@@ -61,10 +61,19 @@ function formatPrice(value: number) {
   return `${value.toLocaleString("ru-RU")} сум`;
 }
 
-function statusOptionsFor(order: OrderRow) {
-  return order.schema === "modern"
-    ? ["new", "processing", "shipped", "delivered", "cancelled"]
-    : ["new", "accepted", "packing", "delivering", "completed", "cancelled"];
+const ORDER_STATUS_CONFIG: Record<string, { label: string; color: string }> = {
+  new:        { label: "Новый",       color: "#22c55e" },
+  processing: { label: "В обработке", color: "#f59e0b" },
+  shipped:    { label: "Отгружен",    color: "#3b82f6" },
+  archived:   { label: "Архив",       color: "#111827" },
+  cancelled:  { label: "Отменен",     color: "#ef4444" },
+};
+
+const ORDER_STATUS_KEYS = ["new", "processing", "shipped", "archived", "cancelled"] as const;
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function statusOptionsFor(_order: OrderRow) {
+  return [...ORDER_STATUS_KEYS];
 }
 
 const paymentStatusOptions = ["pending", "paid", "cancelled"];
@@ -73,14 +82,6 @@ const paymentStatusLabel: Record<string, string> = {
   pending:   "Не оплачено",
   paid:      "Оплачено",
   cancelled: "Отменено",
-};
-
-const orderStatusLabel: Record<string, string> = {
-  new:        "Новый",
-  processing: "В обработке",
-  shipped:    "Отгружен",
-  archived:   "Архив",
-  cancelled:  "Отменен",
 };
 
 function normalizeModernOrder(row: Record<string, unknown>): OrderRow {
@@ -143,6 +144,69 @@ function normalizeLegacyItem(row: Record<string, unknown>): OrderItemRow {
   };
 }
 
+
+function StatusDropdown({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (next: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const cfg = ORDER_STATUS_CONFIG[value] ?? { label: value, color: "#6b7280" };
+
+  return (
+    <div className="relative">
+      {open && (
+        <button
+          type="button"
+          aria-label="Закрыть"
+          className="fixed inset-0 z-10 cursor-default"
+          onClick={() => setOpen(false)}
+        />
+      )}
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="relative z-20 flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold text-white transition hover:opacity-90 active:scale-95"
+        style={{ backgroundColor: cfg.color }}
+      >
+        <span className="h-1.5 w-1.5 rounded-full bg-white/50" />
+        {cfg.label}
+        <svg width="8" height="5" viewBox="0 0 8 5" fill="none" aria-hidden="true" className="opacity-60">
+          <path d="M1 1L4 4L7 1" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+      {open && (
+        <div className="absolute left-0 top-full z-30 mt-1 min-w-[140px] overflow-hidden rounded-xl border border-gray-100 bg-white py-1 shadow-xl">
+          {ORDER_STATUS_KEYS.map((key) => {
+            const optCfg = ORDER_STATUS_CONFIG[key];
+            const selected = key === value;
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => { onChange(key); setOpen(false); }}
+                className="flex w-full items-center gap-2 px-3 py-2 text-[11px] font-semibold transition hover:bg-gray-50"
+              >
+                <span
+                  className="h-2 w-2 flex-shrink-0 rounded-full"
+                  style={{ backgroundColor: optCfg.color }}
+                />
+                <span style={{ color: optCfg.color }}>{optCfg.label}</span>
+                {selected && (
+                  <svg className="ml-auto" width="10" height="10" viewBox="0 0 10 10" fill="none">
+                    <path d="M2 5L4.5 7.5L8.5 2.5" stroke={optCfg.color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function AdminOrdersPageContent() {
   const [orders, setOrders] = useState<OrderRow[]>([]);
@@ -610,17 +674,10 @@ export default function AdminOrdersPageContent() {
                       )}
                     </td>
                     <td className="px-5 py-4">
-                      <select
+                      <StatusDropdown
                         value={order.orderStatus}
-                        onChange={(event) => void updateStatus(order, event.target.value)}
-                        className="rounded-xl border border-gray-200 px-3 py-2 text-xs font-bold text-gray-700 outline-none focus:border-[#EEA391]"
-                      >
-                        {statusOptionsFor(order).map((status) => (
-                          <option key={status} value={status}>
-                            {orderStatusLabel[status] ?? status}
-                          </option>
-                        ))}
-                      </select>
+                        onChange={(next) => void updateStatus(order, next)}
+                      />
                     </td>
                     <td className="px-5 py-4 text-gray-700">
                       {order.createdAt
