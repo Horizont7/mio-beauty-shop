@@ -129,14 +129,6 @@ function normalizeLegacyItem(row: Record<string, unknown>): OrderItemRow {
   };
 }
 
-const STATUS_CONFIGS = [
-  { key: "processing", label: "В обработке", bg: "bg-orange-50", border: "border-orange-200", text: "text-orange-800", dot: "bg-orange-500", amount: "text-orange-600" },
-  { key: "new",        label: "В ожидании",  bg: "bg-purple-50", border: "border-purple-200", text: "text-purple-800", dot: "bg-purple-500", amount: "text-purple-600" },
-  { key: "shipped",    label: "Отгружен",    bg: "bg-blue-50",   border: "border-blue-200",   text: "text-blue-800",   dot: "bg-blue-500",   amount: "text-blue-600"   },
-  { key: "delivered",  label: "Доставлен",   bg: "bg-red-50",    border: "border-red-200",    text: "text-red-800",    dot: "bg-red-500",    amount: "text-red-600"    },
-  { key: "archive",    label: "Архив",       bg: "bg-gray-900",  border: "border-gray-700",   text: "text-white",      dot: "bg-gray-400",   amount: "text-gray-300"   },
-  { key: "cancelled",  label: "Отменен",     bg: "bg-yellow-50", border: "border-yellow-200", text: "text-yellow-800", dot: "bg-yellow-500", amount: "text-yellow-600" },
-] as const;
 
 export default function AdminOrdersPageContent() {
   const [orders, setOrders] = useState<OrderRow[]>([]);
@@ -375,28 +367,45 @@ export default function AdminOrdersPageContent() {
   const summary = useMemo(() => {
     let totalAmount = 0;
     const byStatus: Record<string, { count: number; amount: number }> = {};
+    const pm = {
+      cash:     { count: 0, amount: 0 },
+      transfer: { count: 0, amount: 0 },
+      terminal: { count: 0, amount: 0 },
+      none:     { count: 0, amount: 0 },
+    };
     let paidCount = 0, paidAmount = 0, unpaidCount = 0, unpaidAmount = 0;
 
     for (const o of orders) {
       totalAmount += o.total;
+
       const s = o.orderStatus || "new";
       if (!byStatus[s]) byStatus[s] = { count: 0, amount: 0 };
       byStatus[s].count++;
       byStatus[s].amount += o.total;
-      if (o.paymentStatus === "paid") {
-        paidCount++;
-        paidAmount += o.total;
+
+      const method = (o.paymentMethod || "").toLowerCase();
+      if (method.includes("cash") || method.includes("нал") || method === "cod") {
+        pm.cash.count++;     pm.cash.amount += o.total;
+      } else if (method.includes("transfer") || method.includes("перечис") || method.includes("bank")) {
+        pm.transfer.count++; pm.transfer.amount += o.total;
+      } else if (method.includes("terminal") || method.includes("термин") || method.includes("card") || method.includes("карт")) {
+        pm.terminal.count++; pm.terminal.amount += o.total;
       } else {
-        unpaidCount++;
-        unpaidAmount += o.total;
+        pm.none.count++;     pm.none.amount += o.total;
+      }
+
+      if (o.paymentStatus === "paid") {
+        paidCount++; paidAmount += o.total;
+      } else {
+        unpaidCount++; unpaidAmount += o.total;
       }
     }
 
-    return { totalCount: orders.length, totalAmount, byStatus, paidCount, paidAmount, unpaidCount, unpaidAmount };
+    return { totalCount: orders.length, totalAmount, byStatus, pm, paidCount, paidAmount, unpaidCount, unpaidAmount };
   }, [orders]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {toast && (
         <div
           className={`fixed right-5 top-5 z-50 rounded-2xl px-5 py-4 text-sm font-semibold text-white shadow-2xl ${
@@ -407,113 +416,132 @@ export default function AdminOrdersPageContent() {
         </div>
       )}
 
-      {/* ── Total Orders Card ── */}
-      <section className="rounded-[28px] border border-white bg-white p-6 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#B96C5C]">MIO Beauty admin</p>
-            <h1 className="mt-1 text-3xl font-bold text-gray-950">Заказы</h1>
+      {/* ── Compact ERP Control Panel ── */}
+      <section className="overflow-hidden rounded-[20px] border border-gray-200 bg-white shadow-sm">
+        {/* Action bar */}
+        <div className="flex flex-wrap items-center gap-2 border-b border-gray-100 px-4 py-2">
+          <h1 className="text-sm font-bold text-gray-950">Заказы</h1>
+          <button
+            type="button"
+            className="flex items-center gap-1 rounded-lg bg-[#EEA391] px-3 py-1.5 text-xs font-bold text-white transition hover:bg-[#e59381] active:scale-95"
+          >
+            <svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden="true">
+              <path d="M4.5 1v7M1 4.5h7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+            Создать
+          </button>
+          <div className="flex-1" />
+          {/* Search */}
+          <div className="relative">
+            <svg className="pointer-events-none absolute left-2.5 top-1/2 h-3 w-3 -translate-y-1/2 text-gray-400" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <circle cx="6" cy="6" r="4" stroke="currentColor" strokeWidth="1.4"/>
+              <path d="M9.5 9.5L13 13" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+            </svg>
+            <input
+              type="search"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Поиск..."
+              className="h-8 w-44 rounded-lg border border-gray-200 bg-gray-50 pl-8 pr-3 text-xs outline-none transition focus:border-[#EEA391] focus:bg-white focus:ring-2 focus:ring-[#EEA391]/20"
+            />
           </div>
-          <div className="text-right">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gray-400">Всего заказов</p>
-            {loading ? (
-              <div className="mt-2 space-y-2">
-                <div className="ml-auto h-9 w-20 animate-pulse rounded-xl bg-gray-100" />
-                <div className="ml-auto h-4 w-36 animate-pulse rounded-xl bg-gray-100" />
-              </div>
-            ) : (
-              <>
-                <p className="mt-1 text-4xl font-bold text-gray-950">{summary.totalCount}</p>
-                <p className="mt-1 text-lg font-semibold text-gray-500">{formatPrice(summary.totalAmount)}</p>
-              </>
-            )}
-          </div>
+          {/* Filter */}
+          <button
+            type="button"
+            title="Фильтр"
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-500 transition hover:border-[#EEA391] hover:text-[#B96C5C]"
+          >
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+              <path d="M1 2.5h11M3 6.5h7M5 10.5h3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+            </svg>
+          </button>
+          {/* Record count */}
+          <span className="whitespace-nowrap text-[11px] tabular-nums text-gray-400">
+            {filteredOrders.length} / {orders.length}
+          </span>
+          {/* Refresh */}
+          <button
+            type="button"
+            title="Обновить"
+            onClick={() => void loadOrders()}
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-500 transition hover:border-[#EEA391] hover:text-[#B96C5C]"
+          >
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+              <path d="M11.5 2A6 6 0 1 1 6 1" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+              <path d="M8 1h3.5v3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+          {/* Menu */}
+          <button
+            type="button"
+            title="Параметры"
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-500 transition hover:border-[#EEA391] hover:text-[#B96C5C]"
+          >
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+              <circle cx="6.5" cy="2.5" r="1" fill="currentColor"/>
+              <circle cx="6.5" cy="6.5" r="1" fill="currentColor"/>
+              <circle cx="6.5" cy="10.5" r="1" fill="currentColor"/>
+            </svg>
+          </button>
         </div>
-      </section>
 
-      {/* ── Status Summary Cards ── */}
-      <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        {STATUS_CONFIGS.map((cfg) => {
-          const stat = summary.byStatus[cfg.key] ?? { count: 0, amount: 0 };
-          return (
-            <div key={cfg.key} className={`rounded-[24px] border p-4 ${cfg.bg} ${cfg.border}`}>
-              <div className="flex items-center gap-1.5">
-                <span className={`h-2 w-2 flex-shrink-0 rounded-full ${cfg.dot}`} />
-                <span className={`text-[11px] font-bold leading-tight ${cfg.text}`}>{cfg.label}</span>
+        {/* Summary card strip */}
+        <div className="flex overflow-x-auto divide-x divide-gray-100">
+          {[
+            { label: "Все заказы",      count: summary.totalCount,                        amount: summary.totalAmount,              dot: "bg-[#EEA391]",    accent: true  },
+            { label: "Наличные деньги", count: summary.pm.cash.count,                     amount: summary.pm.cash.amount,           dot: "bg-green-500",    accent: false },
+            { label: "Перечисление",    count: summary.pm.transfer.count,                 amount: summary.pm.transfer.amount,       dot: "bg-blue-500",     accent: false },
+            { label: "Терминал",        count: summary.pm.terminal.count,                 amount: summary.pm.terminal.amount,       dot: "bg-violet-500",   accent: false },
+            { label: "Без типа оплат",  count: summary.pm.none.count,                     amount: summary.pm.none.amount,           dot: "bg-gray-400",     accent: false },
+            { label: "Черновик",        count: summary.byStatus["draft"]?.count ?? 0,     amount: summary.byStatus["draft"]?.amount ?? 0,      dot: "bg-gray-300",     accent: false },
+            { label: "Новый",           count: summary.byStatus["new"]?.count ?? 0,       amount: summary.byStatus["new"]?.amount ?? 0,        dot: "bg-purple-400",   accent: false },
+            { label: "В обработке",     count: summary.byStatus["processing"]?.count ?? 0, amount: summary.byStatus["processing"]?.amount ?? 0, dot: "bg-orange-500",   accent: false },
+            { label: "В ожидании",      count: summary.byStatus["pending"]?.count ?? 0,   amount: summary.byStatus["pending"]?.amount ?? 0,    dot: "bg-amber-500",    accent: false },
+            { label: "Отгружен",        count: summary.byStatus["shipped"]?.count ?? 0,   amount: summary.byStatus["shipped"]?.amount ?? 0,    dot: "bg-sky-500",      accent: false },
+            { label: "Доставлен",       count: summary.byStatus["delivered"]?.count ?? 0, amount: summary.byStatus["delivered"]?.amount ?? 0,  dot: "bg-red-400",      accent: false },
+            { label: "Оплачено",        count: summary.paidCount,                         amount: summary.paidAmount,               dot: "bg-emerald-500",  accent: false },
+            { label: "Не оплачено",     count: summary.unpaidCount,                       amount: summary.unpaidAmount,             dot: "bg-red-500",      accent: false },
+          ].map((card) => (
+            <div
+              key={card.label}
+              className={`flex min-w-[104px] flex-shrink-0 flex-col px-3 py-2.5 transition-colors hover:bg-[#fff8f6] ${
+                card.accent ? "border-b-2 border-b-[#EEA391]" : ""
+              }`}
+            >
+              <div className="flex items-center gap-1">
+                <span className={`h-1.5 w-1.5 flex-shrink-0 rounded-full ${card.dot}`} />
+                <span className="truncate text-[10px] font-semibold leading-none text-gray-500">{card.label}</span>
               </div>
               {loading ? (
-                <div className="mt-3 space-y-1.5">
-                  <div className="h-7 w-10 animate-pulse rounded-lg bg-white/30" />
-                  <div className="h-3 w-20 animate-pulse rounded-lg bg-white/20" />
+                <div className="mt-2 space-y-1">
+                  <div className="h-3.5 w-7 animate-pulse rounded bg-gray-100" />
+                  <div className="h-2 w-14 animate-pulse rounded bg-gray-100" />
                 </div>
               ) : (
                 <>
-                  <p className={`mt-3 text-3xl font-bold ${cfg.text}`}>{stat.count}</p>
-                  <p className={`mt-0.5 text-xs font-medium ${cfg.amount}`}>{formatPrice(stat.amount)}</p>
+                  <span className={`mt-2 text-sm font-bold leading-none tabular-nums ${card.accent ? "text-[#B96C5C]" : "text-gray-900"}`}>
+                    {card.count}
+                  </span>
+                  <span className="mt-0.5 truncate text-[9px] leading-none text-gray-400">
+                    {formatPrice(card.amount)}
+                  </span>
                 </>
               )}
             </div>
-          );
-        })}
-      </section>
-
-      {/* ── Payment Summary Cards ── */}
-      <section className="grid grid-cols-2 gap-3">
-        <div className="rounded-[24px] border border-emerald-200 bg-emerald-50 p-5">
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-emerald-700">Оплачено</p>
-          {loading ? (
-            <div className="mt-3 space-y-2">
-              <div className="h-8 w-16 animate-pulse rounded-xl bg-emerald-200/60" />
-              <div className="h-4 w-32 animate-pulse rounded-xl bg-emerald-200/40" />
-            </div>
-          ) : (
-            <>
-              <p className="mt-2 text-3xl font-bold text-emerald-800">{summary.paidCount}</p>
-              <p className="mt-1 text-sm font-semibold text-emerald-600">{formatPrice(summary.paidAmount)}</p>
-            </>
-          )}
+          ))}
         </div>
-        <div className="rounded-[24px] border border-red-200 bg-red-50 p-5">
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-red-700">Не оплачено</p>
-          {loading ? (
-            <div className="mt-3 space-y-2">
-              <div className="h-8 w-16 animate-pulse rounded-xl bg-red-200/60" />
-              <div className="h-4 w-32 animate-pulse rounded-xl bg-red-200/40" />
-            </div>
-          ) : (
-            <>
-              <p className="mt-2 text-3xl font-bold text-red-800">{summary.unpaidCount}</p>
-              <p className="mt-1 text-sm font-semibold text-red-600">{formatPrice(summary.unpaidAmount)}</p>
-            </>
-          )}
-        </div>
-      </section>
-
-      <section className="rounded-[28px] border border-white bg-white p-5 shadow-sm">
-        <input
-          type="search"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder="Search by order, customer or phone..."
-          className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#EEA391] focus:ring-4 focus:ring-[#EEA391]/20"
-        />
       </section>
 
       {error && (
-        <div className="rounded-[24px] border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
-          <p className="font-bold">Supabase setup needed</p>
-          <p className="mt-2">{error}</p>
+        <div className="rounded-[14px] border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-900">
+          <span className="font-bold">Supabase: </span>{error}
         </div>
       )}
 
-      <section className="overflow-hidden rounded-[28px] border border-white bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
-          <div>
-            <h2 className="font-bold text-gray-950">Orders list</h2>
-            <p className="text-sm text-gray-500">
-              Showing {filteredOrders.length} of {orders.length} ({schema})
-            </p>
-          </div>
+      <section className="overflow-hidden rounded-[20px] border border-gray-200 bg-white shadow-sm">
+        <div className="flex items-center justify-between border-b border-gray-100 px-5 py-3">
+          <h2 className="text-sm font-bold text-gray-950">Список заказов</h2>
+          <span className="text-xs text-gray-400 tabular-nums">{schema}</span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[980px] text-sm">
