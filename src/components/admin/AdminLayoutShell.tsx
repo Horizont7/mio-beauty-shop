@@ -119,20 +119,6 @@ const topNavItems: TopNavItem[] = [
       { href: "/admin/video-highlights", label: "Видео" },
     ],
   },
-  {
-    label: "Контент",
-    links: [
-      { href: "/admin/banners", label: "Баннеры" },
-      { href: "/admin/video-highlights", label: "Видео-подборки" },
-    ],
-  },
-  {
-    label: "Настройки",
-    links: [
-      { href: "/admin/users", label: "Администраторы" },
-      { href: "/admin/security", label: "Безопасность" },
-    ],
-  },
 ];
 
 const searchableLinks: AdminLink[] = Array.from(
