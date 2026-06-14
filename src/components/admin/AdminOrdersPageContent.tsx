@@ -488,19 +488,14 @@ export default function AdminOrdersPageContent() {
         {/* Summary card strip */}
         <div className="flex overflow-x-auto divide-x divide-gray-100">
           {[
-            { label: "Все заказы",      count: summary.totalCount,                        amount: summary.totalAmount,              dot: "bg-[#EEA391]",    accent: true  },
-            { label: "Наличные деньги", count: summary.pm.cash.count,                     amount: summary.pm.cash.amount,           dot: "bg-green-500",    accent: false },
-            { label: "Перечисление",    count: summary.pm.transfer.count,                 amount: summary.pm.transfer.amount,       dot: "bg-blue-500",     accent: false },
-            { label: "Терминал",        count: summary.pm.terminal.count,                 amount: summary.pm.terminal.amount,       dot: "bg-violet-500",   accent: false },
-            { label: "Без типа оплат",  count: summary.pm.none.count,                     amount: summary.pm.none.amount,           dot: "bg-gray-400",     accent: false },
-            { label: "Черновик",        count: summary.byStatus["draft"]?.count ?? 0,     amount: summary.byStatus["draft"]?.amount ?? 0,      dot: "bg-gray-300",     accent: false },
-            { label: "Новый",           count: summary.byStatus["new"]?.count ?? 0,       amount: summary.byStatus["new"]?.amount ?? 0,        dot: "bg-purple-400",   accent: false },
-            { label: "В обработке",     count: summary.byStatus["processing"]?.count ?? 0, amount: summary.byStatus["processing"]?.amount ?? 0, dot: "bg-orange-500",   accent: false },
-            { label: "В ожидании",      count: summary.byStatus["pending"]?.count ?? 0,   amount: summary.byStatus["pending"]?.amount ?? 0,    dot: "bg-amber-500",    accent: false },
-            { label: "Отгружен",        count: summary.byStatus["shipped"]?.count ?? 0,   amount: summary.byStatus["shipped"]?.amount ?? 0,    dot: "bg-sky-500",      accent: false },
-            { label: "Доставлен",       count: summary.byStatus["delivered"]?.count ?? 0, amount: summary.byStatus["delivered"]?.amount ?? 0,  dot: "bg-red-400",      accent: false },
-            { label: "Оплачено",        count: summary.paidCount,                         amount: summary.paidAmount,               dot: "bg-emerald-500",  accent: false },
-            { label: "Не оплачено",     count: summary.unpaidCount,                       amount: summary.unpaidAmount,             dot: "bg-red-500",      accent: false },
+            { label: "Все заказы",   count: summary.totalCount,                          amount: summary.totalAmount,                        dot: "bg-[#EEA391]", accent: true  },
+            { label: "Новый",        count: summary.byStatus["new"]?.count ?? 0,         amount: summary.byStatus["new"]?.amount ?? 0,       dot: "bg-green-500", accent: false },
+            { label: "В обработке",  count: summary.byStatus["processing"]?.count ?? 0,  amount: summary.byStatus["processing"]?.amount ?? 0, dot: "bg-orange-500", accent: false },
+            { label: "Отгружен",     count: summary.byStatus["shipped"]?.count ?? 0,     amount: summary.byStatus["shipped"]?.amount ?? 0,   dot: "bg-blue-900",  accent: false },
+            { label: "Архив",        count: summary.byStatus["archived"]?.count ?? 0,    amount: summary.byStatus["archived"]?.amount ?? 0,  dot: "bg-gray-900",  accent: false },
+            { label: "Отменен",      count: summary.byStatus["cancelled"]?.count ?? 0,   amount: summary.byStatus["cancelled"]?.amount ?? 0, dot: "bg-red-500",   accent: false },
+            { label: "Оплачено",     count: summary.paidCount,                           amount: summary.paidAmount,                         dot: "bg-green-500", accent: false },
+            { label: "Не оплачено",  count: summary.unpaidCount,                         amount: summary.unpaidAmount,                       dot: "bg-red-500",   accent: false },
           ].map((card) => (
             <div
               key={card.label}
