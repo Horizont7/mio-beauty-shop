@@ -69,6 +69,20 @@ function statusOptionsFor(order: OrderRow) {
 
 const paymentStatusOptions = ["pending", "paid", "cancelled"];
 
+const paymentStatusLabel: Record<string, string> = {
+  pending:   "Не оплачено",
+  paid:      "Оплачено",
+  cancelled: "Отменено",
+};
+
+const orderStatusLabel: Record<string, string> = {
+  new:        "Новый",
+  processing: "В обработке",
+  shipped:    "Отгружен",
+  archived:   "Архив",
+  cancelled:  "Отменен",
+};
+
 function normalizeModernOrder(row: Record<string, unknown>): OrderRow {
   return {
     id: textValue(row.id) || Number(row.id),
@@ -539,24 +553,25 @@ export default function AdminOrdersPageContent() {
           <span className="text-xs text-gray-400 tabular-nums">{schema}</span>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[980px] text-sm">
+          <table className="w-full min-w-[1100px] text-sm">
             <thead className="bg-[#fff8f6] text-xs uppercase tracking-[0.14em] text-gray-500">
               <tr>
-                <th className="px-5 py-4 text-left">Order</th>
-                <th className="px-5 py-4 text-left">Customer</th>
-                <th className="px-5 py-4 text-left">Phone</th>
-                <th className="px-5 py-4 text-left">Total</th>
-                <th className="px-5 py-4 text-left">Payment</th>
-                <th className="px-5 py-4 text-left">Status</th>
-                <th className="px-5 py-4 text-left">Created</th>
-                <th className="px-5 py-4 text-right">Actions</th>
+                <th className="px-5 py-4 text-left">Заказ</th>
+                <th className="px-5 py-4 text-left">Клиент</th>
+                <th className="px-5 py-4 text-left">Телефон</th>
+                <th className="px-5 py-4 text-left">Адрес доставки</th>
+                <th className="px-5 py-4 text-left">Сумма</th>
+                <th className="px-5 py-4 text-left">Оплата</th>
+                <th className="px-5 py-4 text-left">Статус</th>
+                <th className="px-5 py-4 text-left">Создан</th>
+                <th className="px-5 py-4 text-right">Действия</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {loading ? (
                 Array.from({ length: 5 }, (_, index) => (
                   <tr key={index} className="animate-pulse">
-                    <td colSpan={8} className="px-5 py-5">
+                    <td colSpan={9} className="px-5 py-5">
                       <div className="h-12 rounded-2xl bg-gray-100" />
                     </td>
                   </tr>
@@ -568,9 +583,10 @@ export default function AdminOrdersPageContent() {
                       {order.orderNumber}
                     </td>
                     <td className="px-5 py-4 text-gray-700">
-                      {order.customerName || "Customer"}
+                      {order.customerName || "—"}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">{order.phone || "-"}</td>
+                    <td className="px-5 py-4 text-gray-700">{order.phone || "—"}</td>
+                    <td className="px-5 py-4 text-gray-700">{order.address || "—"}</td>
                     <td className="px-5 py-4 font-semibold text-gray-950">
                       {formatPrice(order.total)}
                     </td>
@@ -585,12 +601,12 @@ export default function AdminOrdersPageContent() {
                         >
                           {paymentStatusOptions.map((status) => (
                             <option key={status} value={status}>
-                              {status}
+                              {paymentStatusLabel[status] ?? status}
                             </option>
                           ))}
                         </select>
                       ) : (
-                        order.paymentStatus
+                        paymentStatusLabel[order.paymentStatus] ?? order.paymentStatus
                       )}
                     </td>
                     <td className="px-5 py-4">
@@ -601,7 +617,7 @@ export default function AdminOrdersPageContent() {
                       >
                         {statusOptionsFor(order).map((status) => (
                           <option key={status} value={status}>
-                            {status}
+                            {orderStatusLabel[status] ?? status}
                           </option>
                         ))}
                       </select>
@@ -609,7 +625,7 @@ export default function AdminOrdersPageContent() {
                     <td className="px-5 py-4 text-gray-700">
                       {order.createdAt
                         ? new Date(order.createdAt).toLocaleString("ru-RU")
-                        : "-"}
+                        : "—"}
                     </td>
                     <td className="px-5 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
@@ -618,7 +634,7 @@ export default function AdminOrdersPageContent() {
                           onClick={() => void openOrder(order)}
                           className="rounded-xl border border-gray-200 px-3 py-2 text-xs font-bold text-gray-700 transition hover:border-[#EEA391] hover:text-[#B96C5C]"
                         >
-                          View
+                          Просмотр
                         </button>
                         <button
                           type="button"
@@ -642,10 +658,10 @@ export default function AdminOrdersPageContent() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={8} className="px-5 py-16 text-center">
-                    <p className="text-lg font-bold text-gray-950">No orders found</p>
+                  <td colSpan={9} className="px-5 py-16 text-center">
+                    <p className="text-lg font-bold text-gray-950">Заказы не найдены</p>
                     <p className="mt-2 text-sm text-gray-500">
-                      New checkout orders will appear here.
+                      Новые заказы появятся здесь.
                     </p>
                   </td>
                 </tr>
